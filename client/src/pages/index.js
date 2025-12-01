@@ -1,0 +1,9 @@
+export { default as Home } from './Home';
+export { default as About } from './About';
+export { default as Login } from './Login';
+export { default as Register } from './Register';
+export { default as Programs } from './Programs';
+export { default as Pricing } from './Pricing';
+export { default as Trainers } from './Trainers';
+export { default as Schedule } from './Schedule';
+export { default as Contact } from './Contact';

@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment variables - IMPORTANT: Contains sensitive data
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+
+# Uploads (if any local uploads folder)
+uploads/
