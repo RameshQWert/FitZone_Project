@@ -63,7 +63,7 @@ const AdminDashboard = () => {
 
   const recentActivities = [
     { id: 1, type: 'member', action: 'New member registered', name: 'John Smith', time: '5 min ago' },
-    { id: 2, type: 'payment', action: 'Payment received', name: 'Premium Plan - $59', time: '12 min ago' },
+    { id: 2, type: 'payment', action: 'Payment received', name: 'Premium Plan - ₹2999', time: '12 min ago' },
     { id: 3, type: 'class', action: 'Class completed', name: 'Morning Yoga', time: '1 hour ago' },
     { id: 4, type: 'trainer', action: 'Trainer updated profile', name: 'Sarah Williams', time: '2 hours ago' },
     { id: 5, type: 'member', action: 'Membership renewed', name: 'Mike Johnson', time: '3 hours ago' },

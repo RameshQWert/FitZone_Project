@@ -7,3 +7,5 @@ export { default as Pricing } from './Pricing';
 export { default as Trainers } from './Trainers';
 export { default as Schedule } from './Schedule';
 export { default as Contact } from './Contact';
+export { default as Facilities } from './Facilities';
+export { default as Profile } from './Profile';

@@ -74,11 +74,15 @@ const AdminTrainers = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this trainer?')) {
       try {
-        await api.delete(`/trainers/${id}`);
+        console.log('Deleting trainer with ID:', id);
+        const response = await api.delete(`/trainers/${id}`);
+        console.log('Delete response:', response);
         setTrainers(trainers.filter((t) => t._id !== id));
         toast.success('Trainer deleted successfully');
       } catch (error) {
-        toast.error('Failed to delete trainer');
+        console.error('Delete error:', error);
+        console.error('Error response:', error.response?.data);
+        toast.error(error.response?.data?.message || 'Failed to delete trainer');
       }
     }
   };

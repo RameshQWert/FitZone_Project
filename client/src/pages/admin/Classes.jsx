@@ -24,21 +24,37 @@ const AdminClasses = () => {
   const [modalMode, setModalMode] = useState('view');
   const [saving, setSaving] = useState(false);
 
+  // Match backend Class model enum values exactly
   const classTypes = [
-    'strength',
-    'cardio',
-    'yoga',
-    'pilates',
-    'hiit',
-    'crossfit',
-    'swimming',
-    'cycling',
-    'boxing',
-    'dance',
-    'other',
+    'Yoga',
+    'HIIT',
+    'Strength Training',
+    'Cardio',
+    'Pilates',
+    'Zumba',
+    'Boxing',
+    'CrossFit',
+    'Spinning',
+    'Swimming',
+    'Functional Training',
+    'Kickboxing',
+    'Dance Fitness',
+    'Meditation',
   ];
 
-  const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
+  // Match backend enum: 'beginner', 'intermediate', 'advanced', 'all-levels'
+  const difficultyLevels = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+    { value: 'all-levels', label: 'All Levels' },
+  ];
+
+  // Helper to get difficulty label from value
+  const getDifficultyLabel = (value) => {
+    const level = difficultyLevels.find(l => l.value === value);
+    return level ? level.label : value || 'All Levels';
+  };
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -90,14 +106,14 @@ const AdminClasses = () => {
   const handleAdd = () => {
     setSelectedClass({
       name: '',
-      type: 'strength',
+      type: 'Yoga',
       description: '',
       shortDescription: '',
       duration: 60,
       capacity: 20,
-      difficulty: 'All Levels',
+      difficulty: 'all-levels',
       trainer: '',
-      schedule: [{ day: 'Monday', startTime: '09:00', endTime: '10:00' }],
+      schedules: [{ day: 'Monday', startTime: '09:00', endTime: '10:00' }],
       image: '',
       icon: '💪',
       color: 'from-blue-500 to-blue-600',
@@ -113,7 +129,7 @@ const AdminClasses = () => {
     try {
       setSaving(true);
       
-      // Prepare class data
+      // Prepare class data - ensure values match backend enum
       const classData = {
         name: selectedClass.name,
         type: selectedClass.type,
@@ -121,9 +137,9 @@ const AdminClasses = () => {
         shortDescription: selectedClass.shortDescription,
         duration: selectedClass.duration || 60,
         capacity: selectedClass.capacity || 20,
-        difficulty: selectedClass.difficulty || 'All Levels',
+        difficulty: selectedClass.difficulty || 'all-levels',
         trainer: selectedClass.trainer || undefined,
-        schedule: selectedClass.schedule || [],
+        schedules: selectedClass.schedules || [],
         image: selectedClass.image,
         icon: selectedClass.icon || '💪',
         color: selectedClass.color || 'from-blue-500 to-blue-600',
@@ -155,21 +171,21 @@ const AdminClasses = () => {
   const addScheduleSlot = () => {
     setSelectedClass({
       ...selectedClass,
-      schedule: [...(selectedClass.schedule || []), { day: 'Monday', startTime: '09:00', endTime: '10:00' }],
+      schedules: [...(selectedClass.schedules || []), { day: 'Monday', startTime: '09:00', endTime: '10:00' }],
     });
   };
 
   const removeScheduleSlot = (index) => {
     setSelectedClass({
       ...selectedClass,
-      schedule: selectedClass.schedule.filter((_, i) => i !== index),
+      schedules: selectedClass.schedules.filter((_, i) => i !== index),
     });
   };
 
   const updateScheduleSlot = (index, field, value) => {
-    const newSchedule = [...selectedClass.schedule];
-    newSchedule[index] = { ...newSchedule[index], [field]: value };
-    setSelectedClass({ ...selectedClass, schedule: newSchedule });
+    const newSchedules = [...selectedClass.schedules];
+    newSchedules[index] = { ...newSchedules[index], [field]: value };
+    setSelectedClass({ ...selectedClass, schedules: newSchedules });
   };
 
   const getTypeIcon = (type) => {
@@ -287,7 +303,7 @@ const AdminClasses = () => {
                         <span className="text-2xl mr-3">{cls.icon || getTypeIcon(cls.type)}</span>
                         <div>
                           <p className="text-white font-medium">{cls.name}</p>
-                          <p className="text-gray-400 text-sm">{cls.duration || 60} min • {cls.difficulty || 'All Levels'}</p>
+                          <p className="text-gray-400 text-sm">{cls.duration || 60} min • {getDifficultyLabel(cls.difficulty)}</p>
                         </div>
                       </div>
                     </td>
@@ -297,14 +313,14 @@ const AdminClasses = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-300">
-                      {cls.trainer?.fullName || 'Not assigned'}
+                      {cls.trainer?.name || cls.trainer?.fullName || cls.trainerName || 'Not assigned'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-300">
-                        {cls.schedule?.length > 0 ? (
+                        {cls.schedules?.length > 0 ? (
                           <>
-                            <p>{cls.schedule[0].day}</p>
-                            <p className="text-gray-400">{cls.schedule[0].startTime} - {cls.schedule[0].endTime}</p>
+                            <p>{cls.schedules[0].day}</p>
+                            <p className="text-gray-400">{cls.schedules[0].startTime} - {cls.schedules[0].endTime}</p>
                           </>
                         ) : (
                           <span className="text-gray-400">Not scheduled</span>
@@ -455,12 +471,12 @@ const AdminClasses = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty</label>
                       <select
-                        value={selectedClass.difficulty || 'All Levels'}
+                        value={selectedClass.difficulty || 'all-levels'}
                         onChange={(e) => setSelectedClass({ ...selectedClass, difficulty: e.target.value })}
                         className="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white focus:outline-none focus:border-primary-500"
                       >
                         {difficultyLevels.map((level) => (
-                          <option key={level} value={level}>{level}</option>
+                          <option key={level.value} value={level.value}>{level.label}</option>
                         ))}
                       </select>
                     </div>
@@ -476,7 +492,7 @@ const AdminClasses = () => {
                       <option value="">Select a trainer</option>
                       {trainers.map((trainer) => (
                         <option key={trainer._id} value={trainer._id}>
-                          {trainer.fullName}
+                          {trainer.name || trainer.fullName || trainer.user?.fullName || 'Unknown'}
                         </option>
                       ))}
                     </select>
@@ -496,7 +512,7 @@ const AdminClasses = () => {
                       </button>
                     </div>
                     <div className="space-y-3">
-                      {(selectedClass.schedule || []).map((slot, index) => (
+                      {(selectedClass.schedules || []).map((slot, index) => (
                         <div key={index} className="flex items-center gap-3 p-3 bg-dark-700 rounded-xl">
                           <select
                             value={slot.day}
@@ -520,7 +536,7 @@ const AdminClasses = () => {
                             onChange={(e) => updateScheduleSlot(index, 'endTime', e.target.value)}
                             className="px-3 py-2 bg-dark-600 border border-dark-500 rounded-lg text-white focus:outline-none focus:border-primary-500"
                           />
-                          {selectedClass.schedule.length > 1 && (
+                          {selectedClass.schedules?.length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeScheduleSlot(index)}

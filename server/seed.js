@@ -9,6 +9,7 @@ const Trainer = require('./models/Trainer');
 const Subscription = require('./models/Subscription');
 const Class = require('./models/Class');
 const User = require('./models/User');
+const Equipment = require('./models/Equipment');
 
 // Connect to DB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/fitzone');
@@ -320,6 +321,274 @@ const subscriptionsData = [
     isPopular: false,
     color: 'accent',
     isActive: true,
+  },
+];
+
+// Sample Equipment Data
+const equipmentData = [
+  {
+    name: 'Commercial Treadmill',
+    category: 'Cardio',
+    description: 'High-end commercial treadmill with 15% incline, heart rate monitor, and entertainment screen.',
+    quantity: 10,
+    status: 'available',
+    location: 'Cardio Zone',
+    image: 'https://images.unsplash.com/photo-1576678927484-cc907957088c?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-01-15'),
+    lastMaintenanceDate: new Date('2024-11-01'),
+    nextMaintenanceDate: new Date('2025-02-01'),
+  },
+  {
+    name: 'Elliptical Cross Trainer',
+    category: 'Cardio',
+    description: 'Low-impact elliptical machine with adjustable resistance and stride length.',
+    quantity: 8,
+    status: 'available',
+    location: 'Cardio Zone',
+    image: 'https://images.unsplash.com/photo-1570829460005-c840387bb1ca?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-02-20'),
+    lastMaintenanceDate: new Date('2024-10-15'),
+    nextMaintenanceDate: new Date('2025-01-15'),
+  },
+  {
+    name: 'Stationary Bike',
+    category: 'Cardio',
+    description: 'Premium spin bikes with digital display and magnetic resistance system.',
+    quantity: 15,
+    status: 'available',
+    location: 'Cardio Zone',
+    image: 'https://images.unsplash.com/photo-1591291621164-2c6367723315?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-03-10'),
+    lastMaintenanceDate: new Date('2024-11-10'),
+    nextMaintenanceDate: new Date('2025-02-10'),
+  },
+  {
+    name: 'Rowing Machine',
+    category: 'Cardio',
+    description: 'Air resistance rowing machines for full-body cardio workout.',
+    quantity: 6,
+    status: 'available',
+    location: 'Cardio Zone',
+    image: 'https://images.unsplash.com/photo-1519505907962-0a6cb0167c73?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-04-05'),
+    lastMaintenanceDate: new Date('2024-09-20'),
+    nextMaintenanceDate: new Date('2024-12-20'),
+  },
+  {
+    name: 'Bench Press Station',
+    category: 'Strength',
+    description: 'Olympic bench press with safety bars and adjustable rack heights.',
+    quantity: 4,
+    status: 'available',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1534368959876-26bf04f2c947?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-06-15'),
+    lastMaintenanceDate: new Date('2024-10-01'),
+    nextMaintenanceDate: new Date('2025-04-01'),
+  },
+  {
+    name: 'Squat Rack',
+    category: 'Strength',
+    description: 'Heavy-duty power rack with pull-up bars and safety catches.',
+    quantity: 4,
+    status: 'available',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-06-15'),
+    lastMaintenanceDate: new Date('2024-10-01'),
+    nextMaintenanceDate: new Date('2025-04-01'),
+  },
+  {
+    name: 'Smith Machine',
+    category: 'Machines',
+    description: 'Guided barbell system for safe strength training exercises.',
+    quantity: 2,
+    status: 'available',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-07-20'),
+    lastMaintenanceDate: new Date('2024-08-15'),
+    nextMaintenanceDate: new Date('2025-02-15'),
+  },
+  {
+    name: 'Cable Crossover Machine',
+    category: 'Machines',
+    description: 'Dual adjustable pulley system for versatile cable exercises.',
+    quantity: 2,
+    status: 'available',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-08-10'),
+    lastMaintenanceDate: new Date('2024-09-01'),
+    nextMaintenanceDate: new Date('2025-03-01'),
+  },
+  {
+    name: 'Lat Pulldown Machine',
+    category: 'Machines',
+    description: 'Ergonomic lat pulldown with adjustable thigh pads.',
+    quantity: 2,
+    status: 'maintenance',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-05-25'),
+    lastMaintenanceDate: new Date('2024-11-25'),
+    nextMaintenanceDate: new Date('2025-02-25'),
+  },
+  {
+    name: 'Leg Press Machine',
+    category: 'Machines',
+    description: '45-degree leg press with heavy weight capacity.',
+    quantity: 2,
+    status: 'available',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-09-15'),
+    lastMaintenanceDate: new Date('2024-10-20'),
+    nextMaintenanceDate: new Date('2025-01-20'),
+  },
+  {
+    name: 'Dumbbells Set (5-50 lbs)',
+    category: 'Free Weights',
+    description: 'Rubber-coated hex dumbbells ranging from 5 to 50 lbs.',
+    quantity: 2,
+    status: 'available',
+    location: 'Free Weights Section',
+    image: 'https://images.unsplash.com/photo-1586401100295-7a8096fd231a?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-03-01'),
+    lastMaintenanceDate: new Date('2024-06-01'),
+    nextMaintenanceDate: new Date('2025-06-01'),
+  },
+  {
+    name: 'Dumbbells Set (55-100 lbs)',
+    category: 'Free Weights',
+    description: 'Heavy rubber-coated hex dumbbells ranging from 55 to 100 lbs.',
+    quantity: 1,
+    status: 'available',
+    location: 'Free Weights Section',
+    image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-03-01'),
+    lastMaintenanceDate: new Date('2024-06-01'),
+    nextMaintenanceDate: new Date('2025-06-01'),
+  },
+  {
+    name: 'Olympic Barbell',
+    category: 'Free Weights',
+    description: '20kg Olympic barbell with knurled grip.',
+    quantity: 10,
+    status: 'available',
+    location: 'Free Weights Section',
+    image: 'https://images.unsplash.com/photo-1521804906057-1df8fdb718b7?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-04-10'),
+    lastMaintenanceDate: new Date('2024-07-10'),
+    nextMaintenanceDate: new Date('2025-01-10'),
+  },
+  {
+    name: 'Weight Plates Set',
+    category: 'Free Weights',
+    description: 'Rubber-coated Olympic weight plates (2.5kg to 25kg).',
+    quantity: 4,
+    status: 'available',
+    location: 'Free Weights Section',
+    image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-04-10'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Kettlebells Set',
+    category: 'Free Weights',
+    description: 'Cast iron kettlebells ranging from 4kg to 32kg.',
+    quantity: 2,
+    status: 'available',
+    location: 'Functional Training Zone',
+    image: 'https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-01-20'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Battle Ropes',
+    category: 'Accessories',
+    description: '50ft heavy battle ropes for conditioning workouts.',
+    quantity: 4,
+    status: 'available',
+    location: 'Functional Training Zone',
+    image: 'https://images.unsplash.com/photo-1598266663439-2056e6e63ffd?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-05-15'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Medicine Balls',
+    category: 'Accessories',
+    description: 'Weighted medicine balls from 2kg to 10kg.',
+    quantity: 3,
+    status: 'available',
+    location: 'Functional Training Zone',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-02-28'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Foam Rollers',
+    category: 'Accessories',
+    description: 'High-density foam rollers for muscle recovery and warm-up.',
+    quantity: 20,
+    status: 'available',
+    location: 'Studio A',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-06-01'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Yoga Mats',
+    category: 'Accessories',
+    description: 'Premium non-slip yoga mats for classes and stretching.',
+    quantity: 30,
+    status: 'available',
+    location: 'Studio A',
+    image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-06-01'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Resistance Bands Set',
+    category: 'Accessories',
+    description: 'Various resistance levels for strength and mobility training.',
+    quantity: 15,
+    status: 'available',
+    location: 'Functional Training Zone',
+    image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-07-10'),
+    lastMaintenanceDate: null,
+    nextMaintenanceDate: null,
+  },
+  {
+    name: 'Pull-up Bar Station',
+    category: 'Strength',
+    description: 'Multi-grip pull-up and dip station.',
+    quantity: 3,
+    status: 'out_of_order',
+    location: 'Strength Area',
+    image: 'https://images.unsplash.com/photo-1598971639058-a4795bce18f2?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2022-05-10'),
+    lastMaintenanceDate: new Date('2024-08-20'),
+    nextMaintenanceDate: new Date('2024-12-01'),
+  },
+  {
+    name: 'Stair Climber',
+    category: 'Cardio',
+    description: 'Revolving staircase machine for intense lower body cardio.',
+    quantity: 4,
+    status: 'in_use',
+    location: 'Cardio Zone',
+    image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=400&h=300&fit=crop',
+    purchaseDate: new Date('2023-08-15'),
+    lastMaintenanceDate: new Date('2024-10-15'),
+    nextMaintenanceDate: new Date('2025-01-15'),
   },
 ];
 
@@ -694,6 +963,7 @@ const seedDatabase = async () => {
     await Trainer.deleteMany({});
     await Subscription.deleteMany({});
     await Class.deleteMany({});
+    await Equipment.deleteMany({});
     await User.deleteMany({ role: 'admin' }); // Only delete admin users
 
     console.log('🗑️  Cleared existing data');
@@ -714,12 +984,17 @@ const seedDatabase = async () => {
     const classes = await Class.insertMany(classesData);
     console.log(`✅ Inserted ${classes.length} programs/classes`);
 
+    // Insert equipment
+    const equipment = await Equipment.insertMany(equipmentData);
+    console.log(`✅ Inserted ${equipment.length} equipment items`);
+
     console.log('\n🎉 Database seeded successfully!');
     console.log('-----------------------------------');
     console.log(`Admin User: admin@fitzone.com / admin123`);
     console.log(`Trainers: ${trainers.length}`);
     console.log(`Plans: ${subscriptions.length}`);
     console.log(`Programs: ${classes.length}`);
+    console.log(`Equipment: ${equipment.length}`);
     
     process.exit(0);
   } catch (error) {

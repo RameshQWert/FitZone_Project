@@ -9,13 +9,15 @@ const {
 } = require('../controllers/equipmentController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
-router.use(protect);
+// Public routes
+router.route('/').get(getEquipment);
 
-router.route('/').get(getEquipment).post(admin, createEquipment);
+// Protected routes (admin only)
+router.route('/').post(protect, admin, createEquipment);
 router
   .route('/:id')
   .get(getEquipmentById)
-  .put(admin, updateEquipment)
-  .delete(admin, deleteEquipment);
+  .put(protect, admin, updateEquipment)
+  .delete(protect, admin, deleteEquipment);
 
 module.exports = router;

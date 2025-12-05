@@ -73,7 +73,7 @@ const classSchema = new mongoose.Schema(
       },
     ],
     duration: {
-      type: Number,
+      type: Number, // in minutes
       default: 60,
     },
     capacity: {
@@ -110,7 +110,7 @@ const classSchema = new mongoose.Schema(
     benefits: [String],
     equipment: [String],
     calories: {
-      type: Number,
+      type: Number, // Average calories burned
       default: 300,
     },
     intensity: {

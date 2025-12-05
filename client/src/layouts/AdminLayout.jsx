@@ -16,6 +16,7 @@ import {
   HiOutlineX,
   HiOutlineBell,
   HiOutlineSearch,
+  HiOutlineCube,
 } from 'react-icons/hi';
 
 const AdminLayout = () => {
@@ -29,7 +30,7 @@ const AdminLayout = () => {
     { name: 'Members', path: '/admin/members', icon: HiOutlineUsers },
     { name: 'Trainers', path: '/admin/trainers', icon: HiOutlineUserGroup },
     { name: 'Plans', path: '/admin/plans', icon: HiOutlineCreditCard },
-    { name: 'Classes', path: '/admin/classes', icon: HiOutlineCalendar },
+    { name: 'Equipment', path: '/admin/equipment', icon: HiOutlineCube },
     { name: 'Payments', path: '/admin/payments', icon: HiOutlineCash },
     { name: 'Reports', path: '/admin/reports', icon: HiOutlineChartBar },
     { name: 'Settings', path: '/admin/settings', icon: HiOutlineCog },

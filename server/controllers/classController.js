@@ -44,12 +44,20 @@ const getClassById = asyncHandler(async (req, res) => {
 // @route   POST /api/classes
 // @access  Private/Admin
 const createClass = asyncHandler(async (req, res) => {
-  const classItem = await Class.create(req.body);
+  try {
+    console.log('Creating class with data:', JSON.stringify(req.body, null, 2));
+    const classItem = await Class.create(req.body);
+    console.log('Class created successfully:', classItem._id);
 
-  res.status(201).json({
-    success: true,
-    data: classItem,
-  });
+    res.status(201).json({
+      success: true,
+      data: classItem,
+    });
+  } catch (error) {
+    console.error('Error creating class:', error.message);
+    console.error('Full error:', error);
+    throw error;
+  }
 });
 
 // @desc    Update class

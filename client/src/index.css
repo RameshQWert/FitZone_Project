@@ -1,5 +1,5 @@
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+/* Google Fonts - Optimized with display=swap and limited weights */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -20,6 +20,15 @@
   body {
     @apply font-sans bg-dark-500 text-white antialiased;
     min-height: 100vh;
+    /* Enable GPU acceleration */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Optimize image rendering */
+  img {
+    content-visibility: auto;
   }
 
   /* Custom Scrollbar */
@@ -42,9 +51,12 @@
 
 /* Component Styles */
 @layer components {
-  /* Glassmorphism Card */
+  /* Glassmorphism Card - Optimized */
   .glass-card {
     @apply bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-xl;
+    /* GPU acceleration for smooth scrolling */
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   /* Gradient Text */
@@ -52,31 +64,46 @@
     @apply bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 bg-clip-text text-transparent;
   }
 
-  /* Primary Button */
+  /* Primary Button - Optimized transitions */
   .btn-primary {
     @apply px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-xl 
-           hover:from-primary-500 hover:to-primary-400 transform hover:scale-105 transition-all duration-300 
+           hover:from-primary-500 hover:to-primary-400 transition-transform duration-200 
            shadow-lg hover:shadow-glow;
+    transform: translateZ(0);
+  }
+  
+  .btn-primary:hover {
+    transform: scale(1.02) translateZ(0);
   }
 
-  /* Secondary Button */
+  /* Secondary Button - Optimized */
   .btn-secondary {
     @apply px-6 py-3 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white font-semibold rounded-xl 
-           hover:from-secondary-500 hover:to-secondary-400 transform hover:scale-105 transition-all duration-300 
+           hover:from-secondary-500 hover:to-secondary-400 transition-transform duration-200 
            shadow-lg hover:shadow-glow-green;
+    transform: translateZ(0);
+  }
+  
+  .btn-secondary:hover {
+    transform: scale(1.02) translateZ(0);
   }
 
-  /* Outline Button */
+  /* Outline Button - Optimized */
   .btn-outline {
     @apply px-6 py-3 border-2 border-primary-500 text-primary-400 font-semibold rounded-xl 
-           hover:bg-primary-500 hover:text-white transform hover:scale-105 transition-all duration-300;
+           hover:bg-primary-500 hover:text-white transition-all duration-200;
+    transform: translateZ(0);
+  }
+  
+  .btn-outline:hover {
+    transform: scale(1.02) translateZ(0);
   }
 
   /* Input Field */
   .input-field {
     @apply w-full px-4 py-3 bg-dark-400/50 border border-white/10 rounded-xl text-white 
            placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-2 
-           focus:ring-primary-500/20 transition-all duration-300;
+           focus:ring-primary-500/20 transition-colors duration-200;
   }
 
   /* Section Container */
@@ -84,9 +111,15 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Card Hover Effect */
+  /* Card Hover Effect - Optimized */
   .card-hover {
-    @apply transform hover:scale-105 hover:shadow-glow transition-all duration-300;
+    @apply transition-transform duration-200;
+    transform: translateZ(0);
+  }
+  
+  .card-hover:hover {
+    transform: scale(1.02) translateZ(0);
+    @apply shadow-glow;
   }
 
   /* Glow Effect */
@@ -134,15 +167,9 @@
       radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.2) 0px, transparent 50%);
   }
 
-  /* Animated Gradient */
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient 8s ease infinite;
-  }
-
-  @keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* GPU Acceleration Helper */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
   }
 }

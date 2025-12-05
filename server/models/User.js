@@ -43,6 +43,43 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Subscription Details
+    subscription: {
+      planId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subscription'
+      },
+      planName: {
+        type: String,
+        default: null
+      },
+      amount: {
+        type: Number,
+        default: 0
+      },
+      billingCycle: {
+        type: String,
+        enum: ['monthly', 'yearly', null],
+        default: null
+      },
+      paidDate: {
+        type: Date,
+        default: null
+      },
+      dueDate: {
+        type: Date,
+        default: null
+      },
+      paymentId: {
+        type: String,
+        default: null
+      },
+      status: {
+        type: String,
+        enum: ['active', 'expired', 'cancelled', null],
+        default: null
+      }
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
@@ -52,13 +89,12 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Match password

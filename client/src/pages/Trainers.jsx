@@ -17,24 +17,27 @@ const Trainers = () => {
         setLoading(true);
         const data = await trainerService.getAll();
         // Map API data to expected format
+        // Trainer model has: name, image, email, phone, specializations, experience, bio, rating, socialMedia, achievements
         const mappedTrainers = data.map((trainer, index) => ({
           id: trainer._id,
-          name: trainer.fullName,
+          name: trainer.name || trainer.fullName || trainer.user?.fullName || 'Unknown Trainer',
           role: trainer.specializations?.[0] || 'Trainer',
           specialty: mapSpecializationToFilter(trainer.specializations?.[0]),
-          image: trainer.avatar || `https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&h=400&fit=crop`,
+          image: trainer.image || trainer.avatar || trainer.user?.avatar || `https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400&h=400&fit=crop`,
           bio: trainer.bio || 'Dedicated fitness professional committed to helping you achieve your goals.',
           certifications: trainer.achievements || [],
           experience: `${trainer.experience || 0}+ years`,
-          clients: '100+',
+          clients: `${trainer.totalClients || 100}+`,
           rating: trainer.rating || 4.8,
-          reviews: Math.floor(Math.random() * 100) + 50,
+          reviews: trainer.totalReviews || Math.floor(Math.random() * 100) + 50,
           specialties: trainer.specializations || [],
           schedule: formatSchedule(trainer.availability),
-          instagram: trainer.socialLinks?.instagram || '',
-          twitter: trainer.socialLinks?.twitter || '',
+          instagram: trainer.socialMedia?.instagram || '',
+          twitter: trainer.socialMedia?.twitter || '',
           achievements: trainer.achievements || [],
-          quote: trainer.bio?.substring(0, 80) + '...' || 'Transform your body, transform your life.'
+          quote: trainer.bio?.substring(0, 80) + '...' || 'Transform your body, transform your life.',
+          email: trainer.email || trainer.user?.email || '',
+          phone: trainer.phone || trainer.user?.phone || '',
         }));
         setTrainers(mappedTrainers);
       } catch (err) {
@@ -69,13 +72,12 @@ const Trainers = () => {
     return mapping[specialization] || 'strength';
   };
 
-  // Helper function to format schedule
+  // Helper function to format schedule - returns array for modal display
   const formatSchedule = (availability) => {
     if (!availability || availability.length === 0) {
-      return 'Mon-Fri: 6AM-8PM';
+      return ['Mon-Fri: 6AM-8PM'];
     }
-    const days = availability.map(a => a.day?.substring(0, 3)).join(', ');
-    return `${days}: Available`;
+    return availability.map(a => `${a.day}: ${a.startTime || '6AM'} - ${a.endTime || '8PM'}`);
   };
 
   const fadeInUp = {
@@ -288,7 +290,15 @@ const Trainers = () => {
                       <span>👥 {trainer.clients} clients</span>
                     </div>
 
-                    <Button variant="outline" className="w-full mt-4" size="sm">
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTrainer(trainer);
+                      }}
+                    >
                       View Profile
                     </Button>
                   </div>
@@ -400,38 +410,42 @@ const Trainers = () => {
                   </div>
 
                   {/* Certifications */}
-                  <div className="mb-6">
-                    <h3 className="text-white font-semibold mb-3">Certifications</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTrainer.certifications.map((cert, idx) => (
-                        <span 
-                          key={idx}
-                          className="px-3 py-1 bg-dark-400 text-gray-300 rounded-lg text-sm"
-                        >
-                          ✓ {cert}
-                        </span>
-                      ))}
+                  {selectedTrainer.certifications?.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-white font-semibold mb-3">Certifications</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTrainer.certifications.map((cert, idx) => (
+                          <span 
+                            key={idx}
+                            className="px-3 py-1 bg-dark-400 text-gray-300 rounded-lg text-sm"
+                          >
+                            ✓ {cert}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Achievements */}
-                  <div className="mb-6">
-                    <h3 className="text-white font-semibold mb-3">Achievements</h3>
-                    <ul className="space-y-2">
-                      {selectedTrainer.achievements.map((achievement, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-gray-400 text-sm">
-                          <span className="text-accent-400">🏆</span>
-                          {achievement}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {selectedTrainer.achievements?.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-white font-semibold mb-3">Achievements</h3>
+                      <ul className="space-y-2">
+                        {selectedTrainer.achievements.map((achievement, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-gray-400 text-sm">
+                            <span className="text-accent-400">🏆</span>
+                            {achievement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Schedule */}
                   <div className="mb-6">
                     <h3 className="text-white font-semibold mb-3">Schedule</h3>
                     <div className="space-y-1">
-                      {selectedTrainer.schedule.map((time, idx) => (
+                      {selectedTrainer.schedule?.map((time, idx) => (
                         <p key={idx} className="text-gray-400 text-sm flex items-center gap-2">
                           <span>📅</span> {time}
                         </p>

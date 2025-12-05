@@ -1,212 +1,185 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/common';
 import { Card, CardBody } from '../components/ui';
+import { trainerService } from '../services';
+
+// Memoized static data to prevent re-creation on each render
+const features = [
+  {
+    icon: '💪',
+    title: 'Modern Equipment',
+    description: 'State-of-the-art fitness machines and free weights for all your training needs.',
+    color: 'from-primary-500 to-primary-600'
+  },
+  {
+    icon: '👨‍🏫',
+    title: 'Expert Trainers',
+    description: 'Certified personal trainers to guide you through your fitness journey.',
+    color: 'from-secondary-500 to-secondary-600'
+  },
+  {
+    icon: '🧘',
+    title: 'Diverse Classes',
+    description: 'From yoga to HIIT, we offer a wide variety of group fitness classes.',
+    color: 'from-accent-500 to-accent-600'
+  },
+  {
+    icon: '📱',
+    title: 'Track Progress',
+    description: 'Monitor your fitness goals and achievements with our digital platform.',
+    color: 'from-purple-500 to-purple-600'
+  },
+];
+
+const stats = [
+  { number: '5000+', label: 'Active Members', icon: '👥' },
+  { number: '50+', label: 'Expert Trainers', icon: '🏆' },
+  { number: '100+', label: 'Weekly Classes', icon: '📅' },
+  { number: '15+', label: 'Years Experience', icon: '⭐' },
+];
+
+const programs = [
+  {
+    title: 'Strength Training',
+    description: 'Build muscle and increase strength with our comprehensive weight training programs.',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=60',
+    duration: '45-60 min',
+    level: 'All Levels',
+    calories: '300-500'
+  },
+  {
+    title: 'HIIT Workouts',
+    description: 'High-intensity interval training to maximize calorie burn and improve endurance.',
+    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&q=60',
+    duration: '30-45 min',
+    level: 'Intermediate',
+    calories: '400-600'
+  },
+  {
+    title: 'Yoga & Meditation',
+    description: 'Find balance and flexibility with our calming yoga and meditation sessions.',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&q=60',
+    duration: '60 min',
+    level: 'All Levels',
+    calories: '150-250'
+  },
+  {
+    title: 'Cardio Classes',
+    description: 'Get your heart pumping with our energetic cardio and dance fitness classes.',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&q=60',
+    duration: '45 min',
+    level: 'All Levels',
+    calories: '350-500'
+  },
+  {
+    title: 'CrossFit',
+    description: 'Challenge yourself with varied functional movements at high intensity.',
+    image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=500&q=60',
+    duration: '60 min',
+    level: 'Advanced',
+    calories: '500-700'
+  },
+  {
+    title: 'Swimming',
+    description: 'Low-impact full-body workout in our Olympic-sized swimming pool.',
+    image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=500&q=60',
+    duration: '45-60 min',
+    level: 'All Levels',
+    calories: '400-600'
+  },
+];
+
+const testimonials = [
+  {
+    name: 'Sarah Johnson',
+    role: 'Member since 2022',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=60',
+    content: 'FitZone completely transformed my life! I\'ve lost 30 pounds and gained so much confidence. The trainers are amazing and the community is so supportive.',
+    rating: 5
+  },
+  {
+    name: 'Michael Chen',
+    role: 'Member since 2021',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=60',
+    content: 'Best gym I\'ve ever been to. The equipment is top-notch, classes are varied and fun, and the staff genuinely cares about your progress.',
+    rating: 5
+  },
+  {
+    name: 'Emily Rodriguez',
+    role: 'Member since 2023',
+    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=60',
+    content: 'As a beginner, I was nervous to join a gym. FitZone made me feel welcome from day one. Now I can\'t imagine my life without it!',
+    rating: 5
+  },
+  {
+    name: 'David Thompson',
+    role: 'Member since 2020',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=60',
+    content: 'The personal training here is exceptional. My trainer designed a program perfect for my goals and I\'ve seen incredible results.',
+    rating: 5
+  },
+];
+
+const defaultTrainers = [
+  { name: 'John Martinez', specialty: 'Strength & Conditioning', image: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=300&q=60', experience: '10+ years' },
+  { name: 'Lisa Park', specialty: 'Yoga & Pilates', image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=300&q=60', experience: '8+ years' },
+  { name: 'Marcus Williams', specialty: 'HIIT & CrossFit', image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=300&q=60', experience: '12+ years' },
+  { name: 'Anna Schmidt', specialty: 'Nutrition & Wellness', image: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=300&q=60', experience: '7+ years' },
+];
+
+// Simplified animation variants for better performance
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.4 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
+};
 
 const Home = () => {
-  // Animation variants
-  const fadeInUp = {
-    initial: { opacity: 0, y: 60 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
-  };
+  const [trainers, setTrainers] = useState(defaultTrainers);
+  const [loadingTrainers, setLoadingTrainers] = useState(true);
 
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1
+  // Fetch trainers from database
+  useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const data = await trainerService.getAll();
+        const mappedTrainers = data.slice(0, 4).map((trainer) => ({
+          name: trainer.name || trainer.fullName || trainer.user?.fullName || 'Trainer',
+          specialty: trainer.specializations?.[0] || 'Personal Training',
+          image: trainer.image || trainer.avatar || trainer.user?.avatar || 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=300&q=60',
+          experience: `${trainer.experience || 1}+ years`
+        }));
+        if (mappedTrainers.length > 0) {
+          setTrainers(mappedTrainers);
+        }
+      } catch (error) {
+        console.error('Error fetching trainers:', error);
+      } finally {
+        setLoadingTrainers(false);
       }
-    }
-  };
-
-  const features = [
-    {
-      icon: '💪',
-      title: 'Modern Equipment',
-      description: 'State-of-the-art fitness machines and free weights for all your training needs.',
-      color: 'from-primary-500 to-primary-600'
-    },
-    {
-      icon: '👨‍🏫',
-      title: 'Expert Trainers',
-      description: 'Certified personal trainers to guide you through your fitness journey.',
-      color: 'from-secondary-500 to-secondary-600'
-    },
-    {
-      icon: '🧘',
-      title: 'Diverse Classes',
-      description: 'From yoga to HIIT, we offer a wide variety of group fitness classes.',
-      color: 'from-accent-500 to-accent-600'
-    },
-    {
-      icon: '📱',
-      title: 'Track Progress',
-      description: 'Monitor your fitness goals and achievements with our digital platform.',
-      color: 'from-purple-500 to-purple-600'
-    },
-  ];
-
-  const stats = [
-    { number: '5000+', label: 'Active Members', icon: '👥' },
-    { number: '50+', label: 'Expert Trainers', icon: '🏆' },
-    { number: '100+', label: 'Weekly Classes', icon: '📅' },
-    { number: '15+', label: 'Years Experience', icon: '⭐' },
-  ];
-
-  const programs = [
-    {
-      title: 'Strength Training',
-      description: 'Build muscle and increase strength with our comprehensive weight training programs.',
-      image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500',
-      duration: '45-60 min',
-      level: 'All Levels',
-      calories: '300-500'
-    },
-    {
-      title: 'HIIT Workouts',
-      description: 'High-intensity interval training to maximize calorie burn and improve endurance.',
-      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500',
-      duration: '30-45 min',
-      level: 'Intermediate',
-      calories: '400-600'
-    },
-    {
-      title: 'Yoga & Meditation',
-      description: 'Find balance and flexibility with our calming yoga and meditation sessions.',
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500',
-      duration: '60 min',
-      level: 'All Levels',
-      calories: '150-250'
-    },
-    {
-      title: 'Cardio Classes',
-      description: 'Get your heart pumping with our energetic cardio and dance fitness classes.',
-      image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500',
-      duration: '45 min',
-      level: 'All Levels',
-      calories: '350-500'
-    },
-    {
-      title: 'CrossFit',
-      description: 'Challenge yourself with varied functional movements at high intensity.',
-      image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=500',
-      duration: '60 min',
-      level: 'Advanced',
-      calories: '500-700'
-    },
-    {
-      title: 'Swimming',
-      description: 'Low-impact full-body workout in our Olympic-sized swimming pool.',
-      image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=500',
-      duration: '45-60 min',
-      level: 'All Levels',
-      calories: '400-600'
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Member since 2022',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-      content: 'FitZone completely transformed my life! I\'ve lost 30 pounds and gained so much confidence. The trainers are amazing and the community is so supportive.',
-      rating: 5
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Member since 2021',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      content: 'Best gym I\'ve ever been to. The equipment is top-notch, classes are varied and fun, and the staff genuinely cares about your progress.',
-      rating: 5
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Member since 2023',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-      content: 'As a beginner, I was nervous to join a gym. FitZone made me feel welcome from day one. Now I can\'t imagine my life without it!',
-      rating: 5
-    },
-    {
-      name: 'David Thompson',
-      role: 'Member since 2020',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      content: 'The personal training here is exceptional. My trainer designed a program perfect for my goals and I\'ve seen incredible results.',
-      rating: 5
-    },
-  ];
-
-  const trainers = [
-    {
-      name: 'John Martinez',
-      specialty: 'Strength & Conditioning',
-      image: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=300',
-      experience: '10+ years'
-    },
-    {
-      name: 'Lisa Park',
-      specialty: 'Yoga & Pilates',
-      image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=300',
-      experience: '8+ years'
-    },
-    {
-      name: 'Marcus Williams',
-      specialty: 'HIIT & CrossFit',
-      image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=300',
-      experience: '12+ years'
-    },
-    {
-      name: 'Anna Schmidt',
-      specialty: 'Nutrition & Wellness',
-      image: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=300',
-      experience: '7+ years'
-    },
-  ];
+    };
+    fetchTrainers();
+  }, []);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center bg-mesh overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div 
-            className="absolute top-20 left-10 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl"
-            animate={{ 
-              y: [0, -30, 0],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{ 
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div 
-            className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"
-            animate={{ 
-              y: [0, 30, 0],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ 
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-          />
-          <motion.div 
-            className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl"
-            animate={{ 
-              x: [0, 30, 0],
-              y: [0, -20, 0]
-            }}
-            transition={{ 
-              duration: 7,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-          />
+        {/* Static Background Elements - Removed animations for performance */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />
         </div>
 
         {/* Hero Content */}
@@ -214,43 +187,23 @@ const Home = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <motion.div 
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5 }}
             >
-              <motion.span 
-                className="inline-block px-4 py-2 bg-primary-500/20 text-primary-400 rounded-full text-sm font-medium mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
+              <span className="inline-block px-4 py-2 bg-primary-500/20 text-primary-400 rounded-full text-sm font-medium mb-6">
                 🏋️ #1 Fitness Center in the City
-              </motion.span>
-              <motion.h1 
-                className="text-5xl md:text-7xl font-heading font-bold mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              </span>
+              <h1 className="text-5xl md:text-7xl font-heading font-bold mb-6">
                 <span className="text-white">Unleash Your</span>
                 <br />
                 <span className="gradient-text">Full Potential</span>
-              </motion.h1>
-              <motion.p 
-                className="text-xl text-gray-400 mb-10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
+              </h1>
+              <p className="text-xl text-gray-400 mb-10">
                 Join FitZone and experience world-class fitness facilities, expert trainers,
                 and a community dedicated to helping you achieve your health goals.
-              </motion.p>
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/register">
                   <Button variant="primary" size="lg" className="group">
                     Start Your Journey
@@ -259,12 +212,12 @@ const Home = () => {
                     </svg>
                   </Button>
                 </Link>
-                <Link to="/classes">
+                <Link to="/programs">
                   <Button variant="outline" size="lg">
                     Explore Classes
                   </Button>
                 </Link>
-              </motion.div>
+              </div>
             </motion.div>
 
             {/* Right Content - Hero Image/Animation */}

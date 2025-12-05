@@ -1,9 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context';
 
-const Navbar = () => {
+// Static nav links - moved outside component to prevent recreation
+const navLinks = [
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about' },
+  { name: 'Programs', path: '/programs' },
+  { name: 'Facilities', path: '/facilities' },
+  { name: 'Trainers', path: '/trainers' },
+  { name: 'Schedule', path: '/schedule' },
+  { name: 'Pricing', path: '/pricing' },
+  { name: 'Contact', path: '/contact' },
+];
+
+const Navbar = memo(() => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -11,18 +23,28 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
+  // Throttled scroll handler for better performance
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Close profile menu when clicking outside
   useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    
     const handleClickOutside = (e) => {
-      if (isProfileMenuOpen && !e.target.closest('.profile-menu')) {
+      if (!e.target.closest('.profile-menu')) {
         setIsProfileMenuOpen(false);
       }
     };
@@ -30,25 +52,15 @@ const Navbar = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isProfileMenuOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     setIsProfileMenuOpen(false);
     navigate('/');
-  };
-
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Programs', path: '/programs' },
-    { name: 'Trainers', path: '/trainers' },
-    { name: 'Schedule', path: '/schedule' },
-    { name: 'Pricing', path: '/pricing' },
-    { name: 'Contact', path: '/contact' },
-  ];
+  }, [logout, navigate]);
 
   return (
     <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${
+      className={`fixed w-full z-50 transition-all duration-200 ${
         isScrolled
           ? 'bg-dark-500/95 backdrop-blur-lg shadow-lg'
           : 'bg-transparent'
@@ -72,7 +84,7 @@ const Navbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-primary-400 ${
+                className={`text-sm font-medium transition-colors duration-200 hover:text-primary-400 ${
                   location.pathname === link.path
                     ? 'text-primary-400'
                     : 'text-gray-300'
@@ -347,6 +359,6 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
+});
 
 export default Navbar;

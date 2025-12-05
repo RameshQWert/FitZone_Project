@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -25,19 +25,25 @@ export const AuthProvider = ({ children }) => {
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
+        // Set user from localStorage first for faster initial render
         try {
-          // Verify token is still valid by fetching current user
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setToken(storedToken);
+          setIsAuthenticated(true);
+        } catch (e) {
+          // Invalid stored data
+        }
+        
+        // Then verify token in background
+        try {
           const response = await authService.getCurrentUser();
           if (response.success) {
             setUser(response.data);
-            setToken(storedToken);
-            setIsAuthenticated(true);
           } else {
-            // Token invalid, clear storage
             logout();
           }
         } catch (error) {
-          // Token expired or invalid
           console.error('Auth initialization error:', error);
           logout();
         }
@@ -133,7 +139,8 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'trainer';
   }, [user]);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     token,
     loading,
@@ -145,7 +152,7 @@ export const AuthProvider = ({ children }) => {
     hasRole,
     isAdmin,
     isTrainer,
-  };
+  }), [user, token, loading, isAuthenticated, login, register, logout, updateUser, hasRole, isAdmin, isTrainer]);
 
   return (
     <AuthContext.Provider value={value}>

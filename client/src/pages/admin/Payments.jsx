@@ -1,88 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   HiOutlineSearch,
-  HiOutlineFilter,
   HiOutlineDownload,
   HiOutlineCreditCard,
   HiOutlineCash,
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineClock,
+  HiOutlineRefresh,
 } from 'react-icons/hi';
+import api from '../../services/api';
 
 const AdminPayments = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterMethod, setFilterMethod] = useState('all');
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    completedPayments: 0,
+    pendingPayments: 0,
+    failedPayments: 0,
+  });
 
-  // Sample payment data - this will be replaced with real API integration later
-  const payments = [
-    {
-      id: 'PAY-001',
-      member: { name: 'John Smith', email: 'john@email.com', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' },
-      plan: 'Premium',
-      amount: 59,
-      method: 'card',
-      status: 'completed',
-      date: '2024-12-01',
-      transactionId: 'TXN_1234567890',
-    },
-    {
-      id: 'PAY-002',
-      member: { name: 'Sarah Johnson', email: 'sarah@email.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
-      plan: 'Elite',
-      amount: 99,
-      method: 'card',
-      status: 'completed',
-      date: '2024-12-01',
-      transactionId: 'TXN_1234567891',
-    },
-    {
-      id: 'PAY-003',
-      member: { name: 'Mike Williams', email: 'mike@email.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
-      plan: 'Basic',
-      amount: 29,
-      method: 'cash',
-      status: 'pending',
-      date: '2024-11-30',
-      transactionId: 'TXN_1234567892',
-    },
-    {
-      id: 'PAY-004',
-      member: { name: 'Emily Davis', email: 'emily@email.com', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop' },
-      plan: 'Premium',
-      amount: 59,
-      method: 'card',
-      status: 'failed',
-      date: '2024-11-30',
-      transactionId: 'TXN_1234567893',
-    },
-    {
-      id: 'PAY-005',
-      member: { name: 'David Chen', email: 'david@email.com', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
-      plan: 'Elite',
-      amount: 99,
-      method: 'card',
-      status: 'completed',
-      date: '2024-11-29',
-      transactionId: 'TXN_1234567894',
-    },
-  ];
-
-  // Stats
-  const stats = {
-    totalRevenue: payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0),
-    completedPayments: payments.filter(p => p.status === 'completed').length,
-    pendingPayments: payments.filter(p => p.status === 'pending').length,
-    failedPayments: payments.filter(p => p.status === 'failed').length,
+  // Fetch payments from API
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/payments');
+      if (response.data.success) {
+        setPayments(response.data.data);
+        calculateStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Calculate stats from payments
+  const calculateStats = (paymentData) => {
+    const completed = paymentData.filter(p => p.status === 'completed');
+    const pending = paymentData.filter(p => p.status === 'pending');
+    const failed = paymentData.filter(p => p.status === 'failed');
+    
+    setStats({
+      totalRevenue: completed.reduce((sum, p) => sum + p.amount, 0),
+      completedPayments: completed.length,
+      pendingPayments: pending.length,
+      failedPayments: failed.length,
+    });
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
   const filteredPayments = payments.filter((payment) => {
+    const memberName = payment.user?.name || '';
+    const memberEmail = payment.user?.email || '';
     const matchesSearch =
-      payment.member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase());
+      memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.paymentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      memberEmail.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || payment.status === filterStatus;
     const matchesMethod = filterMethod === 'all' || payment.method === filterMethod;
     return matchesSearch && matchesStatus && matchesMethod;
@@ -93,8 +77,9 @@ const AdminPayments = () => {
       completed: { bg: 'bg-green-500/20', text: 'text-green-400', icon: HiOutlineCheckCircle },
       pending: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: HiOutlineClock },
       failed: { bg: 'bg-red-500/20', text: 'text-red-400', icon: HiOutlineXCircle },
+      refunded: { bg: 'bg-purple-500/20', text: 'text-purple-400', icon: HiOutlineRefresh },
     };
-    const style = styles[status];
+    const style = styles[status] || styles.pending;
     const Icon = style.icon;
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${style.bg} ${style.text}`}>
@@ -105,12 +90,34 @@ const AdminPayments = () => {
   };
 
   const getMethodIcon = (method) => {
-    return method === 'card' ? (
-      <HiOutlineCreditCard className="text-blue-400" size={20} />
-    ) : (
-      <HiOutlineCash className="text-green-400" size={20} />
-    );
+    const icons = {
+      card: <HiOutlineCreditCard className="text-blue-400" size={20} />,
+      upi: <span className="text-green-400 font-bold text-sm">UPI</span>,
+      netbanking: <HiOutlineCreditCard className="text-purple-400" size={20} />,
+      wallet: <HiOutlineCash className="text-yellow-400" size={20} />,
+      other: <HiOutlineCash className="text-gray-400" size={20} />,
+    };
+    return icons[method] || icons.other;
   };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -121,6 +128,13 @@ const AdminPayments = () => {
           <p className="text-gray-400 mt-1">Track and manage all payment transactions</p>
         </div>
         <div className="flex items-center space-x-3">
+          <button 
+            onClick={fetchPayments}
+            className="flex items-center px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-gray-300 hover:text-white hover:border-dark-500 transition-colors"
+          >
+            <HiOutlineRefresh className="mr-2" size={20} />
+            Refresh
+          </button>
           <button className="flex items-center px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-gray-300 hover:text-white hover:border-dark-500 transition-colors">
             <HiOutlineDownload className="mr-2" size={20} />
             Export
@@ -138,7 +152,7 @@ const AdminPayments = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total Revenue</p>
-              <h3 className="text-2xl font-bold text-white mt-1">${stats.totalRevenue}</h3>
+              <h3 className="text-2xl font-bold text-white mt-1">₹{stats.totalRevenue.toLocaleString('en-IN')}</h3>
             </div>
             <div className="p-3 bg-green-500/20 rounded-xl">
               <HiOutlineCash className="text-green-400" size={24} />
@@ -198,17 +212,17 @@ const AdminPayments = () => {
         </motion.div>
       </div>
 
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-primary-500/10 to-secondary-500/10 border border-primary-500/20 rounded-2xl p-4">
+      {/* Razorpay Integration Info */}
+      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-2xl p-4">
         <div className="flex items-start space-x-3">
-          <div className="p-2 bg-primary-500/20 rounded-lg">
-            <HiOutlineCreditCard className="text-primary-400" size={20} />
+          <div className="p-2 bg-green-500/20 rounded-lg">
+            <HiOutlineCreditCard className="text-green-400" size={20} />
           </div>
           <div>
-            <h4 className="text-white font-medium">Payment Integration Coming Soon</h4>
+            <h4 className="text-white font-medium">Razorpay Payment Integration Active</h4>
             <p className="text-gray-400 text-sm mt-1">
-              Full payment gateway integration (Stripe/PayPal) will be added in a future update. 
-              Currently showing sample transaction data for demonstration purposes.
+              All payments made through the Pricing page are automatically recorded here. 
+              Payments are processed securely via Razorpay.
             </p>
           </div>
         </div>
@@ -221,7 +235,7 @@ const AdminPayments = () => {
             <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search by name, ID, or transaction..."
+              placeholder="Search by name, email, order ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
@@ -236,6 +250,7 @@ const AdminPayments = () => {
             <option value="completed">Completed</option>
             <option value="pending">Pending</option>
             <option value="failed">Failed</option>
+            <option value="refunded">Refunded</option>
           </select>
           <select
             value={filterMethod}
@@ -244,7 +259,9 @@ const AdminPayments = () => {
           >
             <option value="all">All Methods</option>
             <option value="card">Card</option>
-            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="netbanking">Netbanking</option>
+            <option value="wallet">Wallet</option>
           </select>
         </div>
       </div>
@@ -255,7 +272,7 @@ const AdminPayments = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-dark-700/50">
-                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Transaction ID</th>
+                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Order ID</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Member</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Plan</th>
                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Amount</th>
@@ -268,38 +285,43 @@ const AdminPayments = () => {
               {filteredPayments.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
-                    No payments found
+                    <div className="flex flex-col items-center">
+                      <HiOutlineCreditCard className="text-gray-600 mb-3" size={48} />
+                      <p className="text-lg font-medium">No payments found</p>
+                      <p className="text-sm mt-1">Payments will appear here when users make purchases</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-dark-700/30 transition-colors">
+                  <tr key={payment._id} className="hover:bg-dark-700/30 transition-colors">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="text-white font-medium">{payment.id}</p>
-                        <p className="text-gray-400 text-xs">{payment.transactionId}</p>
+                        <p className="text-white font-medium text-sm">{payment.orderId?.slice(0, 20)}...</p>
+                        <p className="text-gray-400 text-xs mt-1">{payment.paymentId?.slice(0, 20)}...</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <img
-                          src={payment.member.avatar}
-                          alt={payment.member.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">
+                          {payment.user?.name?.charAt(0) || 'U'}
+                        </div>
                         <div className="ml-3">
-                          <p className="text-white font-medium">{payment.member.name}</p>
-                          <p className="text-gray-400 text-sm">{payment.member.email}</p>
+                          <p className="text-white font-medium">{payment.user?.name || 'Unknown User'}</p>
+                          <p className="text-gray-400 text-sm">{payment.user?.email || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-medium">
-                        {payment.plan}
-                      </span>
+                      <div>
+                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-medium">
+                          {payment.planName}
+                        </span>
+                        <p className="text-gray-400 text-xs mt-1 capitalize">{payment.billingCycle}</p>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-white font-semibold">${payment.amount}</span>
+                      <span className="text-white font-semibold">₹{payment.amount?.toLocaleString('en-IN')}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
@@ -308,7 +330,7 @@ const AdminPayments = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(payment.status)}</td>
-                    <td className="px-6 py-4 text-gray-300">{payment.date}</td>
+                    <td className="px-6 py-4 text-gray-300 text-sm">{formatDate(payment.createdAt)}</td>
                   </tr>
                 ))
               )}

@@ -4,68 +4,35 @@ const subscriptionSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-    },
-    slug: {
-      type: String,
-      unique: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    originalPrice: {
-      type: Number,
-    },
-    duration: {
-      type: Number, // in months
-      required: true,
-      default: 1,
+      required: [true, 'Plan name is required'],
+      trim: true,
     },
     description: {
       type: String,
+      default: '',
     },
-    features: [String],
-    highlights: [String],
-    maxClassesPerMonth: {
+    price: {
       type: Number,
-      default: 0, // 0 means unlimited
+      required: [true, 'Price is required'],
+      min: 0,
     },
-    personalTrainerAccess: {
-      type: Boolean,
-      default: false,
-    },
-    personalTrainingSessions: {
+    duration: {
       type: Number,
-      default: 0,
+      required: true,
+      default: 1,
+      min: 1,
     },
-    nutritionPlanIncluded: {
-      type: Boolean,
-      default: false,
+    features: {
+      type: [String],
+      default: [],
     },
-    lockerAccess: {
-      type: Boolean,
-      default: false,
-    },
-    guestPasses: {
-      type: Number,
-      default: 0,
-    },
-    freezeOption: {
-      type: Boolean,
-      default: false,
-    },
-    priority: {
-      type: Number,
-      default: 0, // For ordering plans
+    color: {
+      type: String,
+      default: 'blue',
     },
     isPopular: {
       type: Boolean,
       default: false,
-    },
-    color: {
-      type: String,
-      default: 'primary', // primary, secondary, accent
     },
     isActive: {
       type: Boolean,
@@ -76,13 +43,5 @@ const subscriptionSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-// Generate slug before saving
-subscriptionSchema.pre('save', function(next) {
-  if (!this.slug) {
-    this.slug = this.name.toLowerCase().replace(/\s+/g, '-');
-  }
-  next();
-});
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

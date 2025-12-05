@@ -36,6 +36,7 @@ app.use('/api/trainers', require('./routes/trainerRoutes'));
 app.use('/api/classes', require('./routes/classRoutes'));
 app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
 app.use('/api/equipment', require('./routes/equipmentRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 
 // Health Check
 app.get('/api/health', (req, res) => {

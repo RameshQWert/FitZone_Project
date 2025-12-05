@@ -123,20 +123,26 @@ const updateTrainer = asyncHandler(async (req, res) => {
 // @route   DELETE /api/trainers/:id
 // @access  Private/Admin
 const deleteTrainer = asyncHandler(async (req, res) => {
+  console.log('Delete trainer request for ID:', req.params.id);
+  
   const trainer = await Trainer.findById(req.params.id);
+  console.log('Trainer found:', trainer ? 'Yes' : 'No');
 
   if (trainer) {
     // Update user role back to member if linked
     if (trainer.user) {
+      console.log('Updating linked user role back to member');
       await User.findByIdAndUpdate(trainer.user, { role: 'member' });
     }
     await Trainer.deleteOne({ _id: req.params.id });
+    console.log('Trainer deleted successfully');
 
     res.json({
       success: true,
       message: 'Trainer removed',
     });
   } else {
+    console.log('Trainer not found');
     res.status(404);
     throw new Error('Trainer not found');
   }

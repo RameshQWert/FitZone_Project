@@ -7,13 +7,30 @@
     <meta name="description" content="FitZone - Transform your body and mind with our state-of-the-art fitness center" />
     <meta name="theme-color" content="#6366f1" />
     <title>FitZone - Fitness Center Management System</title>
-    <!-- Google Fonts -->
+    
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    
+    <!-- Preconnect for critical resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Optimized Google Fonts - Limited weights for faster load -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Inline critical CSS for faster first paint -->
+    <style>
+      body { background-color: #0f172a; margin: 0; }
+      #root { min-height: 100vh; }
+      .initial-loader { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+      .initial-loader::after { content: ''; width: 48px; height: 48px; border: 3px solid #1e293b; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="initial-loader"></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

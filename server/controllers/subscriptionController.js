@@ -47,20 +47,21 @@ const createSubscription = asyncHandler(async (req, res) => {
 // @route   PUT /api/subscriptions/:id
 // @access  Private/Admin
 const updateSubscription = asyncHandler(async (req, res) => {
-  const subscription = await Subscription.findById(req.params.id);
+  const subscription = await Subscription.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
 
-  if (subscription) {
-    Object.assign(subscription, req.body);
-    const updatedSubscription = await subscription.save();
-
-    res.json({
-      success: true,
-      data: updatedSubscription,
-    });
-  } else {
+  if (!subscription) {
     res.status(404);
     throw new Error('Subscription not found');
   }
+
+  res.json({
+    success: true,
+    data: subscription,
+  });
 });
 
 // @desc    Delete subscription

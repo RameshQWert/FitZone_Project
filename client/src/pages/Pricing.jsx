@@ -1,14 +1,173 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Loading } from '../components/common';
 import { subscriptionService } from '../services';
+import { paymentService } from '../services/paymentService';
+import { useAuth } from '../context/AuthContext';
 
 const Pricing = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [processingPlanId, setProcessingPlanId] = useState(null);
+  const [paymentMessage, setPaymentMessage] = useState({ type: '', text: '' });
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedPlanForQR, setSelectedPlanForQR] = useState(null);
+  
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // UPI Details
+  const UPI_ID = '9939896403@ybl';
+  const UPI_NAME = 'FitZone';
+
+  // Generate UPI QR Code URL
+  const getUPIQRCode = (amount, planName) => {
+    const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent(planName + ' Plan Payment')}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+  };
+
+  // Handle UPI QR Payment
+  const handleUPIPayment = (plan) => {
+    if (!isAuthenticated) {
+      setPaymentMessage({ type: 'error', text: 'Please login to purchase a plan' });
+      setTimeout(() => {
+        navigate('/login', { state: { from: '/pricing' } });
+      }, 1500);
+      return;
+    }
+    setSelectedPlanForQR(plan);
+    setShowQRModal(true);
+  };
+
+  // Handle Razorpay Payment
+  const handleBuyNow = async (plan) => {
+    // Check if user is logged in
+    if (!isAuthenticated) {
+      setPaymentMessage({ type: 'error', text: 'Please login to purchase a plan' });
+      setTimeout(() => {
+        navigate('/login', { state: { from: '/pricing' } });
+      }, 1500);
+      return;
+    }
+
+    try {
+      setProcessingPlanId(plan._id);
+      setPaymentMessage({ type: '', text: '' });
+
+      // Calculate amount based on billing cycle
+      const amount = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+
+      // Check if user already has this subscription
+      const subscriptionCheck = await paymentService.checkSubscription(plan.name, amount, user?._id);
+      
+      if (!subscriptionCheck.canPurchase) {
+        setPaymentMessage({ 
+          type: 'error', 
+          text: subscriptionCheck.message 
+        });
+        setProcessingPlanId(null);
+        return;
+      }
+
+      // Load Razorpay script
+      const loaded = await paymentService.loadRazorpayScript();
+      if (!loaded) {
+        setPaymentMessage({ type: 'error', text: 'Failed to load payment gateway. Please try again.' });
+        setProcessingPlanId(null);
+        return;
+      }
+
+      // Get Razorpay key
+      const keyData = await paymentService.getKey();
+      const razorpayKey = keyData.key;
+
+      // Create order
+      const orderData = await paymentService.createOrder({
+        amount,
+        planId: plan._id,
+        planName: plan.name,
+        billingCycle
+      });
+
+      // Razorpay options
+      const options = {
+        key: razorpayKey,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: 'FitZone',
+        description: `${plan.name} - ${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'} Plan`,
+        image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=100&h=100&fit=crop',
+        order_id: orderData.order.id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyData = await paymentService.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: plan._id,
+              planName: plan.name,
+              billingCycle,
+              amount,
+              userId: user?._id
+            });
+            
+            if (verifyData.success) {
+              setPaymentMessage({ type: 'success', text: 'Payment successful! Welcome to ' + plan.name + ' plan!' });
+              setTimeout(() => {
+                navigate('/');
+              }, 2000);
+            } else {
+              setPaymentMessage({ type: 'error', text: 'Payment verification failed. Please contact support.' });
+            }
+          } catch (err) {
+            setPaymentMessage({ type: 'error', text: 'Payment verification failed. Please contact support.' });
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        options: {
+          checkout: {
+            method: {
+              upi: 1,
+              card: 1,
+              netbanking: 1,
+              wallet: 1,
+              paylater: 1
+            }
+          }
+        },
+        theme: {
+          color: '#f97316'
+        },
+        modal: {
+          ondismiss: function() {
+            setProcessingPlanId(null);
+          }
+        }
+      };
+
+      // Open Razorpay checkout
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response) {
+        setPaymentMessage({ type: 'error', text: 'Payment failed: ' + response.error.description });
+        setProcessingPlanId(null);
+      });
+      razorpay.open();
+      
+    } catch (err) {
+      console.error('Payment error:', err);
+      setPaymentMessage({ type: 'error', text: err.message || 'Failed to initiate payment. Please try again.' });
+    } finally {
+      setProcessingPlanId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -17,6 +176,7 @@ const Pricing = () => {
         const data = await subscriptionService.getAll();
         // Map API data to expected format
         const mappedPlans = data.map(plan => ({
+          _id: plan._id,
           name: plan.name,
           description: plan.description || `${plan.name} membership plan`,
           monthlyPrice: plan.price,
@@ -155,6 +315,41 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen pt-20">
+      {/* Payment Message Toast */}
+      {paymentMessage.text && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-lg shadow-lg ${
+            paymentMessage.type === 'success' 
+              ? 'bg-green-500/90 text-white' 
+              : 'bg-red-500/90 text-white'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {paymentMessage.type === 'success' ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span className="font-medium">{paymentMessage.text}</span>
+            <button 
+              onClick={() => setPaymentMessage({ type: '', text: '' })}
+              className="ml-2 hover:opacity-80"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Hero Section */}
       <section className="relative py-24 bg-mesh overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
@@ -258,7 +453,7 @@ const Pricing = () => {
                   {/* Price */}
                   <div className="p-8 text-center border-b border-white/10">
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-gray-400 text-2xl">$</span>
+                      <span className="text-gray-400 text-2xl">₹</span>
                       <motion.span 
                         key={billingCycle}
                         initial={{ opacity: 0, y: -20 }}
@@ -273,7 +468,7 @@ const Pricing = () => {
                     </div>
                     {billingCycle === 'yearly' && (
                       <p className="text-secondary-400 text-sm mt-2">
-                        Save ${plan.monthlyPrice * 12 - plan.yearlyPrice}/year
+                        Save ₹{plan.monthlyPrice * 12 - plan.yearlyPrice}/year
                       </p>
                     )}
                   </div>
@@ -305,15 +500,25 @@ const Pricing = () => {
                     </ul>
 
                     {/* CTA Button */}
-                    <div className="mt-8">
-                      <Link to="/register">
-                        <Button 
-                          variant={plan.popular ? 'primary' : 'outline'} 
-                          className="w-full"
-                        >
-                          {plan.popular ? 'Start Free Trial' : 'Get Started'}
-                        </Button>
-                      </Link>
+                    <div className="mt-8 space-y-3">
+                      <Button 
+                        variant={plan.popular ? 'primary' : 'outline'} 
+                        className="w-full"
+                        onClick={() => handleBuyNow(plan)}
+                        disabled={processingPlanId !== null}
+                      >
+                        {processingPlanId === plan._id ? 'Processing...' : 'Buy Now'}
+                      </Button>
+                      <button 
+                        onClick={() => handleUPIPayment(plan)}
+                        disabled={processingPlanId !== null}
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M21.36 12.02l-6.32-6.32c-.42-.42-1.14-.13-1.14.47v3.32c-5.52.52-9.48 5.03-9.48 10.51 0 .82.67 1.5 1.5 1.5.69 0 1.29-.47 1.46-1.14.89-3.46 3.87-5.84 7.52-5.84v3.32c0 .6.72.89 1.14.47l6.32-6.32c.26-.26.26-.68 0-.94z"/>
+                        </svg>
+                        Pay with UPI / QR
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -358,7 +563,7 @@ const Pricing = () => {
                           {plan.name}
                         </span>
                         <span className="text-gray-400 text-sm">
-                          ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}/{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                          ₹{billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}/{billingCycle === 'monthly' ? 'mo' : 'yr'}
                         </span>
                       </div>
                     </th>
@@ -538,6 +743,115 @@ const Pricing = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* UPI QR Code Modal */}
+      <AnimatePresence>
+        {showQRModal && selectedPlanForQR && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowQRModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">Pay with UPI</h3>
+                    <p className="text-sm text-gray-500">Scan QR or use UPI ID</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowQRModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Plan Details */}
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 mb-6 text-white">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm opacity-90">Plan</p>
+                    <p className="text-lg font-bold">{selectedPlanForQR.name} - {billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm opacity-90">Amount</p>
+                    <p className="text-2xl font-bold">
+                      ₹{billingCycle === 'monthly' ? selectedPlanForQR.monthlyPrice : selectedPlanForQR.yearlyPrice}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="bg-white p-4 rounded-xl border-2 border-gray-200 shadow-inner">
+                  <img 
+                    src={getUPIQRCode(
+                      billingCycle === 'monthly' ? selectedPlanForQR.monthlyPrice : selectedPlanForQR.yearlyPrice,
+                      selectedPlanForQR.name
+                    )}
+                    alt="UPI QR Code"
+                    className="w-56 h-56"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-3">Scan with any UPI app</p>
+                
+                {/* UPI Apps Icons */}
+                <div className="flex items-center gap-4 mt-3">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/512px-Google_Pay_Logo.svg.png" alt="GPay" className="h-8" />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/512px-PhonePe_Logo.svg.png" alt="PhonePe" className="h-8" />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Paytm_Logo_%28standalone%29.svg/512px-Paytm_Logo_%28standalone%29.svg.png" alt="Paytm" className="h-8" />
+                </div>
+              </div>
+
+              {/* UPI ID */}
+              <div className="bg-gray-100 rounded-xl p-4 mb-6">
+                <p className="text-sm text-gray-500 mb-2">Or pay using UPI ID</p>
+                <div className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-gray-200">
+                  <span className="font-mono font-semibold text-gray-800">{UPI_ID}</span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(UPI_ID);
+                      setPaymentMessage({ type: 'success', text: 'UPI ID copied to clipboard!' });
+                      setTimeout(() => setPaymentMessage({ type: '', text: '' }), 2000);
+                    }}
+                    className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="text-center text-sm text-gray-500">
+                <p>After payment, please share the screenshot</p>
+                <p>to <span className="text-orange-500 font-medium">support@fitzone.com</span></p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
