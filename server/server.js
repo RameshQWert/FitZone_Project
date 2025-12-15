@@ -85,6 +85,23 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/site-content', require('./routes/siteContentRoutes'));
 
+// Root route - API welcome
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Welcome to FitZone API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      members: '/api/members',
+      trainers: '/api/trainers',
+      products: '/api/products',
+    }
+  });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({ 
