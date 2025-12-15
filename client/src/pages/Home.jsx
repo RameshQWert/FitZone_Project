@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { getTestimonials } from '../services/siteContentService';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [testimonials, setTestimonials] = useState([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 500], [0, 150]);
   const y2 = useTransform(scrollY, [0, 500], [0, -150]);
@@ -117,13 +120,44 @@ const Home = () => {
     { name: "Emily Rodriguez", specialty: "Boxing & MMA", experience: "9+ years", image: "https://images.unsplash.com/photo-1609138617989-de8d50d0e4ff?w=400&q=80" }
   ];
 
-  // Testimonials
-  const testimonials = [
+  // Fallback testimonials (used if API fails)
+  const fallbackTestimonials = [
     { name: "Alex Thompson", role: "Lost 30 lbs in 4 months", content: "FitZone completely transformed my life. The trainers pushed me beyond my limits, and the results speak for themselves. I've never felt stronger or more confident!", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80", rating: 5 },
     { name: "Jennifer Martinez", role: "Marathon Runner", content: "The facilities are world-class and the community is incredibly supportive. Training here helped me achieve my dream of completing my first marathon!", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80", rating: 5 },
     { name: "Michael Brown", role: "Fitness Enthusiast", content: "I've tried many gyms, but FitZone stands out. The variety of classes, equipment quality, and personal attention from staff is unmatched.", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80", rating: 5 },
     { name: "Lisa Chen", role: "Working Professional", content: "As a busy professional, I need efficiency. FitZone's early morning classes and flexible scheduling have made fitness a seamless part of my routine.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80", rating: 5 }
   ];
+
+  // Fetch testimonials from database
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const data = await getTestimonials();
+        if (data && data.length > 0) {
+          // Filter active testimonials and map to display format
+          const activeTestimonials = data
+            .filter(t => t.isActive)
+            .sort((a, b) => a.order - b.order)
+            .map(t => ({
+              name: t.name,
+              role: t.role || 'Member',
+              content: t.content,
+              image: t.image || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
+              rating: t.rating || 5
+            }));
+          setTestimonials(activeTestimonials.length > 0 ? activeTestimonials : fallbackTestimonials);
+        } else {
+          setTestimonials(fallbackTestimonials);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+        setTestimonials(fallbackTestimonials);
+      } finally {
+        setTestimonialsLoading(false);
+      }
+    };
+    fetchTestimonials();
+  }, []);
 
   // Auto-slide effect
   useEffect(() => {
@@ -714,13 +748,36 @@ const Home = () => {
           </motion.div>
 
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            className={`grid gap-8 ${testimonials.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : testimonials.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
           >
-            {testimonials.map((testimonial, index) => (
+            {testimonialsLoading ? (
+              // Loading skeleton
+              [...Array(2)].map((_, index) => (
+                <div key={index} className="relative h-full p-8 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-2xl border border-white/10 animate-pulse">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 rounded-full bg-white/10" />
+                    <div className="flex-1">
+                      <div className="h-5 bg-white/10 rounded w-32 mb-2" />
+                      <div className="h-4 bg-white/10 rounded w-24" />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-white/10 rounded w-full" />
+                    <div className="h-4 bg-white/10 rounded w-full" />
+                    <div className="h-4 bg-white/10 rounded w-3/4" />
+                  </div>
+                </div>
+              ))
+            ) : testimonials.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-400">No testimonials available at the moment.</p>
+              </div>
+            ) : (
+              testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
                 variants={fadeInUp}
@@ -753,7 +810,8 @@ const Home = () => {
                   </blockquote>
                 </div>
               </motion.div>
-            ))}
+            ))
+            )}
           </motion.div>
         </div>
       </section>

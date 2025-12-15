@@ -8,4 +8,6 @@ export { default as attendanceService } from './attendanceService';
 export { default as chatService } from './chatService';
 export { default as aiChatService } from './aiChatService';
 export { default as storeService } from './storeService';
+export { default as siteContentService } from './siteContentService';
 export * from './adminService';
+export * from './siteContentService';
