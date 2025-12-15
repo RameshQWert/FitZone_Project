@@ -5,4 +5,11 @@ module.exports = {
   Class: require('./Class'),
   Subscription: require('./Subscription'),
   Equipment: require('./Equipment'),
+  Attendance: require('./Attendance'),
+  QRToken: require('./QRToken'),
+  Message: require('./Message'),
+  Conversation: require('./Conversation'),
+  Product: require('./Product'),
+  Cart: require('./Cart'),
+  Order: require('./Order'),
 };

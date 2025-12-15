@@ -6,4 +6,5 @@ module.exports = {
   classRoutes: require('./classRoutes'),
   subscriptionRoutes: require('./subscriptionRoutes'),
   equipmentRoutes: require('./equipmentRoutes'),
+  chatRoutes: require('./chatRoutes'),
 };

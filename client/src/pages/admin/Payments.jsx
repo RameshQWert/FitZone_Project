@@ -60,7 +60,7 @@ const AdminPayments = () => {
   }, []);
 
   const filteredPayments = payments.filter((payment) => {
-    const memberName = payment.user?.name || '';
+    const memberName = payment.user?.fullName || '';
     const memberEmail = payment.user?.email || '';
     const matchesSearch =
       memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -304,10 +304,10 @@ const AdminPayments = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">
-                          {payment.user?.name?.charAt(0) || 'U'}
+                          {payment.user?.fullName?.charAt(0) || 'U'}
                         </div>
                         <div className="ml-3">
-                          <p className="text-white font-medium">{payment.user?.name || 'Unknown User'}</p>
+                          <p className="text-white font-medium">{payment.user?.fullName || 'Unknown User'}</p>
                           <p className="text-gray-400 text-sm">{payment.user?.email || 'N/A'}</p>
                         </div>
                       </div>

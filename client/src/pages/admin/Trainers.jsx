@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HiOutlineSearch,
@@ -10,6 +10,8 @@ import {
   HiOutlineStar,
   HiOutlineMail,
   HiOutlinePhone,
+  HiOutlinePhotograph,
+  HiOutlineUpload,
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
@@ -23,6 +25,8 @@ const AdminTrainers = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view');
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
 
   const specializations = [
     'Strength Training',
@@ -174,6 +178,46 @@ const AdminTrainers = () => {
         ...selectedTrainer,
         specializations: [...current, spec],
       });
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.data.success) {
+        setSelectedTrainer({
+          ...selectedTrainer,
+          image: response.data.data.url,
+        });
+        toast.success('Image uploaded successfully');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -371,6 +415,42 @@ const AdminTrainers = () => {
                   </div>
                 ) : (
                   <form className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <img
+                          src={selectedTrainer.image || selectedTrainer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTrainer.name || 'Trainer')}&background=8b5cf6&color=fff&size=100`}
+                          alt="Trainer"
+                          className="w-24 h-24 rounded-full object-cover border-2 border-dark-600"
+                        />
+                        {uploadingImage && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Profile Photo</label>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingImage}
+                          className="flex items-center px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-gray-300 hover:bg-dark-600 transition-colors disabled:opacity-50"
+                        >
+                          <HiOutlineUpload className="mr-2" size={18} />
+                          {uploadingImage ? 'Uploading...' : 'Upload Photo'}
+                        </button>
+                        <p className="text-xs text-gray-500 mt-1">Max 5MB, JPG/PNG</p>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
@@ -404,13 +484,15 @@ const AdminTrainers = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Avatar URL</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Rating</label>
                         <input
-                          type="url"
-                          value={selectedTrainer.avatar || ''}
-                          onChange={(e) => setSelectedTrainer({ ...selectedTrainer, avatar: e.target.value })}
+                          type="number"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={selectedTrainer.rating || 5}
+                          onChange={(e) => setSelectedTrainer({ ...selectedTrainer, rating: parseFloat(e.target.value) })}
                           className="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white focus:outline-none focus:border-primary-500"
-                          placeholder="https://..."
                         />
                       </div>
                     </div>

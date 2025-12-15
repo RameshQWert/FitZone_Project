@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 
 // Context
-import { AuthProvider, useAuth } from './context';
+import { AuthProvider, useAuth, SocketProvider } from './context';
 
 // Layouts - Keep these non-lazy as they're always needed
-import { MainLayout, AuthLayout, AdminLayout } from './layouts';
+import { MainLayout, AuthLayout, AdminLayout, StoreLayout } from './layouts';
 
 // Lazy load pages for code splitting
 const Home = lazy(() => import('./pages/Home'));
@@ -20,6 +20,8 @@ const Schedule = lazy(() => import('./pages/Schedule'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Facilities = lazy(() => import('./pages/Facilities'));
 const Profile = lazy(() => import('./pages/Profile'));
+const MemberChat = lazy(() => import('./pages/MemberChat'));
+const BMICalculator = lazy(() => import('./pages/BMICalculator'));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -30,6 +32,25 @@ const AdminEquipment = lazy(() => import('./pages/admin/Equipment'));
 const AdminPayments = lazy(() => import('./pages/admin/Payments'));
 const AdminReports = lazy(() => import('./pages/admin/Reports'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminAttendance = lazy(() => import('./pages/admin/Attendance'));
+const AdminQRDisplay = lazy(() => import('./pages/admin/QRDisplay'));
+const AdminChat = lazy(() => import('./pages/admin/Chat'));
+const AdminSiteContent = lazy(() => import('./pages/admin/SiteContent'));
+
+// Lazy load admin store pages
+const AdminStoreDashboard = lazy(() => import('./pages/admin/StoreDashboard'));
+const AdminStoreProducts = lazy(() => import('./pages/admin/StoreProducts'));
+const AdminStoreOrders = lazy(() => import('./pages/admin/StoreOrders'));
+
+// Lazy load store pages
+const Shop = lazy(() => import('./pages/store/Shop'));
+const ProductDetail = lazy(() => import('./pages/store/ProductDetail'));
+const Cart = lazy(() => import('./pages/store/Cart'));
+const Checkout = lazy(() => import('./pages/store/Checkout'));
+const MyOrders = lazy(() => import('./pages/store/MyOrders'));
+
+// Member attendance scanner
+const AttendanceScanner = lazy(() => import('./pages/AttendanceScanner'));
 
 // Loading fallback component
 const PageLoader = memo(() => (
@@ -91,6 +112,18 @@ const AppRoutes = () => {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/attendance-scanner" element={<ProtectedRoute><AttendanceScanner /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><MemberChat /></ProtectedRoute>} />
+          <Route path="/bmi-calculator" element={<ProtectedRoute><BMICalculator /></ProtectedRoute>} />
+        </Route>
+
+        {/* Store Routes with StoreLayout */}
+        <Route element={<StoreLayout />}>
+          <Route path="/store" element={<Shop />} />
+          <Route path="/store/product/:slug" element={<ProductDetail />} />
+          <Route path="/store/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/store/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/store/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
         </Route>
 
         {/* Auth Routes - Only for guests */}
@@ -116,6 +149,14 @@ const AppRoutes = () => {
           <Route path="payments" element={<AdminPayments />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="attendance" element={<AdminAttendance />} />
+          <Route path="qr-display" element={<AdminQRDisplay />} />
+          <Route path="chat" element={<AdminChat />} />
+          <Route path="site-content" element={<AdminSiteContent />} />
+          {/* Store Management Routes */}
+          <Route path="store" element={<AdminStoreDashboard />} />
+          <Route path="store/products" element={<AdminStoreProducts />} />
+          <Route path="store/orders" element={<AdminStoreOrders />} />
         </Route>
 
         {/* 404 Route */}
@@ -129,6 +170,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <SocketProvider>
         <Toaster
           position="top-right"
           toastOptions={{
@@ -153,6 +195,7 @@ function App() {
           }}
         />
         <AppRoutes />
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

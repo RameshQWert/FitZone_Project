@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/common';
 import { Card, CardBody } from '../components/ui';
 import { trainerService } from '../services';
+import api from '../services/api';
 
 // Memoized static data to prevent re-creation on each render
 const features = [
@@ -91,7 +92,7 @@ const programs = [
   },
 ];
 
-const testimonials = [
+const defaultTestimonials = [
   {
     name: 'Sarah Johnson',
     role: 'Member since 2022',
@@ -147,6 +148,7 @@ const staggerContainer = {
 const Home = () => {
   const [trainers, setTrainers] = useState(defaultTrainers);
   const [loadingTrainers, setLoadingTrainers] = useState(true);
+  const [testimonials, setTestimonials] = useState(defaultTestimonials);
 
   // Fetch trainers from database
   useEffect(() => {
@@ -169,6 +171,21 @@ const Home = () => {
       }
     };
     fetchTrainers();
+  }, []);
+
+  // Fetch testimonials from database
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await api.get('/site-content/testimonials');
+        if (response.data.data && response.data.data.length > 0) {
+          setTestimonials(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+      }
+    };
+    fetchTestimonials();
   }, []);
 
   return (

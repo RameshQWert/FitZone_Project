@@ -1,10 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/common';
 import { Card, CardBody } from '../components/ui';
+import api from '../services/api';
+
+const defaultTeam = [
+  {
+    name: 'James Wilson',
+    role: 'Founder & CEO',
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300',
+    bio: 'Former Olympic athlete with 20+ years in fitness industry.'
+  },
+  {
+    name: 'Sarah Martinez',
+    role: 'Operations Director',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300',
+    bio: 'MBA graduate with expertise in fitness center management.'
+  },
+  {
+    name: 'Dr. Robert Kim',
+    role: 'Head of Wellness',
+    image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300',
+    bio: 'Sports medicine specialist ensuring member health and safety.'
+  },
+];
 
 const About = () => {
+  const [team, setTeam] = useState(defaultTeam);
+
+  // Fetch team members from database
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await api.get('/site-content/team');
+        if (response.data.data && response.data.data.length > 0) {
+          setTeam(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching team members:', error);
+      }
+    };
+    fetchTeam();
+  }, []);
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
     animate: { opacity: 1, y: 0 },
@@ -123,27 +161,6 @@ const About = () => {
     { name: 'Dumbbells', brand: 'Rogue', count: '5-150 lbs', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300' },
     { name: 'Barbells', brand: 'Eleiko', count: 15, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300' },
     { name: 'Rowing Machines', brand: 'Concept2', count: 10, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300' },
-  ];
-
-  const team = [
-    {
-      name: 'James Wilson',
-      role: 'Founder & CEO',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300',
-      bio: 'Former Olympic athlete with 20+ years in fitness industry.'
-    },
-    {
-      name: 'Sarah Martinez',
-      role: 'Operations Director',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300',
-      bio: 'MBA graduate with expertise in fitness center management.'
-    },
-    {
-      name: 'Dr. Robert Kim',
-      role: 'Head of Wellness',
-      image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300',
-      bio: 'Sports medicine specialist ensuring member health and safety.'
-    },
   ];
 
   return (

@@ -4,4 +4,8 @@ export { default as trainerService } from './trainerService';
 export { default as subscriptionService } from './subscriptionService';
 export { default as classService } from './classService';
 export { default as adminService } from './adminService';
+export { default as attendanceService } from './attendanceService';
+export { default as chatService } from './chatService';
+export { default as aiChatService } from './aiChatService';
+export { default as storeService } from './storeService';
 export * from './adminService';

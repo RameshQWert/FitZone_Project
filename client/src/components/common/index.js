@@ -3,3 +3,4 @@ export { default as Footer } from './Footer';
 export { default as Loading } from './Loading';
 export { default as Button } from './Button';
 export { default as LottieAnimation } from './LottieAnimation';
+export { default as AIChatBot } from './AIChatBot';

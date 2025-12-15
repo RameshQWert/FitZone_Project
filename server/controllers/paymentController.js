@@ -232,14 +232,25 @@ const checkSubscription = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getAllPayments = asyncHandler(async (req, res) => {
   const payments = await Payment.find()
-    .populate('user', 'name email avatar')
+    .populate({
+      path: 'user',
+      select: 'fullName email avatar phone',
+      options: { retainNullValues: true }
+    })
     .populate('planId', 'name')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Transform payments to handle null users
+  const transformedPayments = payments.map(payment => ({
+    ...payment,
+    user: payment.user || { fullName: 'Deleted User', email: 'N/A' }
+  }));
 
   res.json({
     success: true,
-    count: payments.length,
-    data: payments
+    count: transformedPayments.length,
+    data: transformedPayments
   });
 });
 

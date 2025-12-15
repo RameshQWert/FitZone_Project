@@ -12,6 +12,7 @@ const navLinks = [
   { name: 'Trainers', path: '/trainers' },
   { name: 'Schedule', path: '/schedule' },
   { name: 'Pricing', path: '/pricing' },
+  { name: 'Store', path: '/store' },
   { name: 'Contact', path: '/contact' },
 ];
 
@@ -97,6 +98,17 @@ const Navbar = memo(() => {
 
           {/* Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Cart Icon - Always visible */}
+            <Link
+              to="/store/cart"
+              className="relative p-2 text-gray-300 hover:text-orange-400 transition-colors"
+              title="Shopping Cart"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </Link>
+
             {isAuthenticated ? (
               <div className="relative profile-menu">
                 <motion.button
@@ -179,6 +191,36 @@ const Navbar = memo(() => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           My Profile
+                        </Link>
+                        <Link
+                          to="/attendance-scanner"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center px-4 py-2 text-gray-300 hover:bg-dark-300 hover:text-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h2m14 0h2M4 20h2m0-4h2m10 0h2m-6-4h.01M4 8h2m6-4h.01" />
+                          </svg>
+                          Check In / Out
+                        </Link>
+                        <Link
+                          to="/chat"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center px-4 py-2 text-gray-300 hover:bg-dark-300 hover:text-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          Chat with Admin
+                        </Link>
+                        <Link
+                          to="/bmi-calculator"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center px-4 py-2 text-gray-300 hover:bg-dark-300 hover:text-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          BMI Calculator
                         </Link>
                         <Link
                           to="/settings"
@@ -323,6 +365,34 @@ const Navbar = memo(() => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       My Profile
+                    </Link>
+                    <Link
+                      to="/attendance-scanner"
+                      className="block py-3 px-4 rounded-xl text-gray-300 hover:bg-dark-300 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Check In / Out
+                    </Link>
+                    <Link
+                      to="/chat"
+                      className="block py-3 px-4 rounded-xl text-gray-300 hover:bg-dark-300 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      💬 Chat with Admin
+                    </Link>
+                    <Link
+                      to="/bmi-calculator"
+                      className="block py-3 px-4 rounded-xl text-gray-300 hover:bg-dark-300 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      🧮 BMI Calculator
+                    </Link>
+                    <Link
+                      to="/store/cart"
+                      className="block py-3 px-4 rounded-xl text-gray-300 hover:bg-dark-300 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      🛒 My Cart
                     </Link>
                     <button
                       onClick={() => {

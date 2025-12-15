@@ -17,6 +17,12 @@ import {
   HiOutlineBell,
   HiOutlineSearch,
   HiOutlineCube,
+  HiOutlineQrcode,
+  HiOutlineChatAlt2,
+  HiOutlineShoppingBag,
+  HiOutlineCollection,
+  HiOutlineClipboardList,
+  HiOutlineDocumentText,
 } from 'react-icons/hi';
 
 const AdminLayout = () => {
@@ -31,9 +37,18 @@ const AdminLayout = () => {
     { name: 'Trainers', path: '/admin/trainers', icon: HiOutlineUserGroup },
     { name: 'Plans', path: '/admin/plans', icon: HiOutlineCreditCard },
     { name: 'Equipment', path: '/admin/equipment', icon: HiOutlineCube },
+    { name: 'Attendance', path: '/admin/attendance', icon: HiOutlineQrcode },
+    { name: 'Messages', path: '/admin/chat', icon: HiOutlineChatAlt2 },
     { name: 'Payments', path: '/admin/payments', icon: HiOutlineCash },
     { name: 'Reports', path: '/admin/reports', icon: HiOutlineChartBar },
+    { name: 'Site Content', path: '/admin/site-content', icon: HiOutlineDocumentText },
     { name: 'Settings', path: '/admin/settings', icon: HiOutlineCog },
+  ];
+
+  const storeMenuItems = [
+    { name: 'Store Dashboard', path: '/admin/store', icon: HiOutlineShoppingBag, end: true },
+    { name: 'Products', path: '/admin/store/products', icon: HiOutlineCollection },
+    { name: 'Orders', path: '/admin/store/orders', icon: HiOutlineClipboardList },
   ];
 
   const handleLogout = () => {
@@ -78,6 +93,40 @@ const AdminLayout = () => {
               `flex items-center px-3 py-3 rounded-xl transition-all duration-200 group ${
                 isActive
                   ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'text-gray-400 hover:bg-dark-700 hover:text-white'
+              }`
+            }
+          >
+            <item.icon className="w-6 h-6 flex-shrink-0" />
+            {sidebarOpen && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="ml-3 font-medium"
+              >
+                {item.name}
+              </motion.span>
+            )}
+          </NavLink>
+        ))}
+
+        {/* Store Management Section */}
+        {sidebarOpen && (
+          <div className="pt-4 mt-4 border-t border-dark-700">
+            <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Store Management
+            </p>
+          </div>
+        )}
+        {storeMenuItems.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            end={item.end}
+            className={({ isActive }) =>
+              `flex items-center px-3 py-3 rounded-xl transition-all duration-200 group ${
+                isActive
+                  ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 border border-orange-500/30'
                   : 'text-gray-400 hover:bg-dark-700 hover:text-white'
               }`
             }

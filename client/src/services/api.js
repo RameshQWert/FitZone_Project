@@ -1,6 +1,19 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Dynamically determine API URL - use same host as the frontend
+const getApiUrl = () => {
+  // If explicitly set in env, use that
+  if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // For development: use the same hostname as the browser
+  // This allows phone access via IP while laptop uses localhost
+  const hostname = window.location.hostname;
+  return `http://${hostname}:5000/api`;
+};
+
+const API_URL = getApiUrl();
 
 // Simple in-memory cache for GET requests
 const cache = new Map();

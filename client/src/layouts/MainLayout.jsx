@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Navbar, Footer } from '../components/common';
+import { Navbar, Footer, AIChatBot } from '../components/common';
 
 const MainLayout = () => {
   return (
@@ -10,6 +10,8 @@ const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      {/* AI Fitness Chatbot - Available for logged-in members */}
+      <AIChatBot />
     </div>
   );
 };

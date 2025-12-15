@@ -9,3 +9,9 @@ export { default as Schedule } from './Schedule';
 export { default as Contact } from './Contact';
 export { default as Facilities } from './Facilities';
 export { default as Profile } from './Profile';
+export { default as AttendanceScanner } from './AttendanceScanner';
+export { default as MemberChat } from './MemberChat';
+export { default as BMICalculator } from './BMICalculator';
+
+// Store Pages
+export { Shop, ProductDetail, Cart, Checkout } from './store';

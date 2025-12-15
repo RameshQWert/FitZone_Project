@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+// import basicSsl from '@vitejs/plugin-basic-ssl'  // Disabled - causes mixed content issues
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react()],  // Removed basicSsl() - using HTTP for development
   build: {
     // Enable minification
     minify: 'terser',
