@@ -6,14 +6,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],  // Removed basicSsl() - using HTTP for development
   build: {
-    // Enable minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // Use esbuild for minification (built-in, no extra install needed)
+    minify: 'esbuild',
     // Code splitting for better caching
     rollupOptions: {
       output: {
