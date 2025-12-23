@@ -3,18 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { chatService } from '../services';
+import api from '../services/api';
 import { Loading } from '../components/common';
 import { 
   HiOutlineChatAlt2, 
   HiOutlinePaperAirplane,
   HiOutlineUserCircle,
   HiOutlineCheck,
-  HiOutlineCheckCircle
+  HiOutlineCheckCircle,
+  HiOutlineArrowLeft,
+  HiOutlineUserGroup,
 } from 'react-icons/hi';
 
 const MemberChat = () => {
   const { user } = useAuth();
   const { socket, isConnected, sendMessage: socketSendMessage, sendTyping, joinConversation } = useSocket();
+  const [chatMode, setChatMode] = useState(null); // null = selection, 'admin', 'trainer'
+  const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [trainers, setTrainers] = useState([]);
+  const [trainerConversations, setTrainerConversations] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -28,33 +35,92 @@ const MemberChat = () => {
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  // Initialize conversation
+  // Fetch available trainers
   useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const response = await api.get('/trainers');
+        const data = response.data.data || response.data;
+        setTrainers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching trainers:', error);
+      }
+    };
+    fetchTrainers();
+  }, []);
+
+  // Fetch trainer conversations
+  useEffect(() => {
+    const fetchTrainerConversations = async () => {
+      try {
+        const response = await chatService.getMyTrainerConversations();
+        const data = response.data?.data || response.data || [];
+        setTrainerConversations(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching trainer conversations:', error);
+      }
+    };
+    if (user) {
+      fetchTrainerConversations();
+    }
+  }, [user]);
+
+  // Initialize conversation based on chat mode
+  useEffect(() => {
+    // If no chat mode selected, just ensure loading is false
+    if (!chatMode) {
+      setLoading(false);
+      return;
+    }
+
+    // If user not loaded yet, wait
+    if (!user) {
+      return;
+    }
+
     const initConversation = async () => {
       try {
         setLoading(true);
-        const response = await chatService.getMyConversation();
-        const conv = response.data?.data || response.data || response;
-        setConversation(conv);
+        setConversation(null);
+        setMessages([]);
+        let conv = null;
+        
+        if (chatMode === 'admin') {
+          console.log('Fetching admin conversation...');
+          const response = await chatService.getMyConversation();
+          console.log('Admin conversation response:', response);
+          conv = response.data?.data || response.data || response;
+        } else if (chatMode === 'trainer' && selectedTrainer) {
+          console.log('Fetching trainer conversation for:', selectedTrainer._id);
+          const response = await chatService.getOrCreateTrainerConversation(selectedTrainer._id);
+          console.log('Trainer conversation response:', response);
+          conv = response.data?.data || response.data || response;
+        }
         
         if (conv && conv._id) {
-          // Load initial messages
+          console.log('Got conversation:', conv._id);
+          setConversation(conv);
+          
           const messagesResponse = await chatService.getMessages(conv._id, 1, 50);
+          console.log('Messages response:', messagesResponse);
           const messagesData = messagesResponse.data?.data || messagesResponse.data || [];
           setMessages(Array.isArray(messagesData) ? messagesData : []);
           setHasMore(messagesResponse.data?.pagination?.hasMore || false);
+        } else {
+          console.log('No conversation returned');
+          setConversation(conv || {});
         }
       } catch (error) {
         console.error('Error initializing conversation:', error);
+        // Still set conversation to empty object so UI doesn't stay in loading
+        setConversation({});
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
-      initConversation();
-    }
-  }, [user]);
+    initConversation();
+  }, [user, chatMode, selectedTrainer]);
 
   // Join conversation room when conversation is loaded
   useEffect(() => {
@@ -256,6 +322,110 @@ const MemberChat = () => {
 
   const messageGroups = groupMessagesByDate(messages);
 
+  // Chat selection screen
+  if (!chatMode) {
+    return (
+      <div className="min-h-screen bg-gray-900 pt-20 pb-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl font-bold text-white mb-2">Messages</h1>
+            <p className="text-gray-400">Choose who you want to chat with</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Chat with Admin */}
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setChatMode('admin')}
+              className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-primary-500 transition-all text-left"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mb-4">
+                <HiOutlineChatAlt2 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Chat with Admin</h3>
+              <p className="text-gray-400 text-sm">Get help with memberships, payments, and general inquiries</p>
+            </motion.button>
+
+            {/* Chat with Trainers */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-gray-800 rounded-2xl p-6 border border-gray-700"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-secondary-500 to-accent-500 rounded-2xl flex items-center justify-center mb-4">
+                <HiOutlineUserGroup className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Chat with Trainers</h3>
+              <p className="text-gray-400 text-sm mb-4">Connect with your trainers for fitness guidance</p>
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {trainers.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No trainers available</p>
+                ) : (
+                  trainers.map((trainer) => {
+                    const existingConv = trainerConversations.find(c => c.trainer === trainer._id);
+                    return (
+                      <button
+                        key={trainer._id}
+                        onClick={() => {
+                          setSelectedTrainer(trainer);
+                          setChatMode('trainer');
+                        }}
+                        className="w-full flex items-center gap-3 p-3 bg-gray-700/50 hover:bg-gray-700 rounded-xl transition-colors text-left"
+                      >
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
+                          {trainer.user?.avatar ? (
+                            <img src={trainer.user.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            <span className="text-white font-bold text-sm">
+                              {trainer.user?.fullName?.charAt(0) || 'T'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-medium truncate">{trainer.user?.fullName || 'Trainer'}</p>
+                          <p className="text-gray-400 text-xs truncate">{trainer.specializations?.join(', ') || 'Fitness Trainer'}</p>
+                        </div>
+                        {existingConv?.unreadByMember > 0 && (
+                          <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
+                            {existingConv.unreadByMember}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Get chat partner name
+  const getChatPartnerName = () => {
+    if (chatMode === 'admin') return 'Admin';
+    if (chatMode === 'trainer' && selectedTrainer) {
+      return selectedTrainer.user?.fullName || 'Trainer';
+    }
+    return 'Chat';
+  };
+
+  const getChatPartnerInitial = () => {
+    if (chatMode === 'admin') return 'A';
+    if (chatMode === 'trainer' && selectedTrainer) {
+      return selectedTrainer.user?.fullName?.charAt(0) || 'T';
+    }
+    return 'C';
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 pt-20 pb-8">
       <div className="max-w-4xl ml-auto mr-4 lg:mr-8 px-4">
@@ -268,11 +438,26 @@ const MemberChat = () => {
           {/* Chat Header */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  setChatMode(null);
+                  setSelectedTrainer(null);
+                  setConversation(null);
+                  setMessages([]);
+                }}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <HiOutlineArrowLeft className="w-5 h-5 text-white" />
+              </button>
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <HiOutlineChatAlt2 className="w-6 h-6 text-white" />
+                {chatMode === 'trainer' && selectedTrainer?.user?.avatar ? (
+                  <img src={selectedTrainer.user.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold text-lg">{getChatPartnerInitial()}</span>
+                )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Chat with Admin</h2>
+                <h2 className="text-xl font-bold text-white">Chat with {getChatPartnerName()}</h2>
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-400'}`}></span>
                   <span className="text-sm text-white/80">
@@ -307,7 +492,7 @@ const MemberChat = () => {
               <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <HiOutlineChatAlt2 className="w-16 h-16 mb-4" />
                 <p className="text-lg">No messages yet</p>
-                <p className="text-sm">Start a conversation with admin!</p>
+                <p className="text-sm">Start a conversation with {getChatPartnerName()}!</p>
               </div>
             ) : (
               Object.entries(messageGroups).map(([date, msgs]) => (
@@ -333,8 +518,12 @@ const MemberChat = () => {
                         <div className={`flex items-end gap-2 max-w-[80%] ${isOwn ? 'flex-row-reverse' : ''}`}>
                           {/* Avatar */}
                           {!isOwn && (
-                            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs font-bold">A</span>
+                            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {chatMode === 'trainer' && selectedTrainer?.user?.avatar ? (
+                                <img src={selectedTrainer.user.avatar} alt="" className="w-8 h-8 object-cover" />
+                              ) : (
+                                <span className="text-white text-xs font-bold">{getChatPartnerInitial()}</span>
+                              )}
                             </div>
                           )}
 
@@ -379,8 +568,12 @@ const MemberChat = () => {
                   exit={{ opacity: 0, y: 10 }}
                   className="flex items-center gap-2"
                 >
-                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">A</span>
+                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center overflow-hidden">
+                    {chatMode === 'trainer' && selectedTrainer?.user?.avatar ? (
+                      <img src={selectedTrainer.user.avatar} alt="" className="w-8 h-8 object-cover" />
+                    ) : (
+                      <span className="text-white text-xs font-bold">{getChatPartnerInitial()}</span>
+                    )}
                   </div>
                   <div className="bg-gray-700 px-4 py-2 rounded-2xl rounded-bl-md">
                     <div className="flex gap-1">

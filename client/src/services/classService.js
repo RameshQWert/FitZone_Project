@@ -13,6 +13,12 @@ export const classService = {
     return response.data.data || response.data;
   },
 
+  // Get class by ID (alias for ClassBooking component)
+  getClassById: async (id) => {
+    const response = await api.get(`/classes/${id}`);
+    return response.data;
+  },
+
   // Create class (Admin only)
   create: async (classData) => {
     const response = await api.post('/classes', classData);

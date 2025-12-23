@@ -107,6 +107,8 @@ const AdminTrainers = () => {
     setSelectedTrainer({
       name: '',
       email: '',
+      password: '',
+      confirmPassword: '',
       phone: '',
       specializations: [],
       experience: 1,
@@ -130,6 +132,25 @@ const AdminTrainers = () => {
     try {
       setSaving(true);
       
+      // Validation for adding new trainer
+      if (modalMode === 'add') {
+        if (!selectedTrainer.name || !selectedTrainer.email || !selectedTrainer.password) {
+          toast.error('Please fill in name, email, and password');
+          setSaving(false);
+          return;
+        }
+        if (selectedTrainer.password !== selectedTrainer.confirmPassword) {
+          toast.error('Passwords do not match');
+          setSaving(false);
+          return;
+        }
+        if (selectedTrainer.password.length < 6) {
+          toast.error('Password must be at least 6 characters');
+          setSaving(false);
+          return;
+        }
+      }
+      
       // Prepare data for API
       const trainerData = {
         name: selectedTrainer.name || selectedTrainer.fullName,
@@ -146,11 +167,16 @@ const AdminTrainers = () => {
         isAvailable: selectedTrainer.isAvailable !== false,
       };
 
+      // Include password only when adding new trainer
+      if (modalMode === 'add') {
+        trainerData.password = selectedTrainer.password;
+      }
+
       if (modalMode === 'add') {
         const response = await api.post('/trainers', trainerData);
         const newTrainer = response.data.data || response.data;
         setTrainers([...trainers, newTrainer]);
-        toast.success('Trainer added successfully');
+        toast.success('Trainer created with login credentials');
       } else {
         const response = await api.put(`/trainers/${selectedTrainer._id}`, trainerData);
         const updatedTrainer = response.data.data || response.data;
@@ -470,9 +496,42 @@ const AdminTrainers = () => {
                           onChange={(e) => setSelectedTrainer({ ...selectedTrainer, email: e.target.value })}
                           className="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white focus:outline-none focus:border-primary-500"
                           required
+                          disabled={modalMode === 'edit'}
                         />
                       </div>
                     </div>
+
+                    {/* Password Fields - Only shown when adding new trainer */}
+                    {modalMode === 'add' && (
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-dark-700/50 rounded-xl border border-dark-600">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                          <input
+                            type="password"
+                            value={selectedTrainer.password || ''}
+                            onChange={(e) => setSelectedTrainer({ ...selectedTrainer, password: e.target.value })}
+                            className="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white focus:outline-none focus:border-primary-500"
+                            placeholder="Min 6 characters"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password *</label>
+                          <input
+                            type="password"
+                            value={selectedTrainer.confirmPassword || ''}
+                            onChange={(e) => setSelectedTrainer({ ...selectedTrainer, confirmPassword: e.target.value })}
+                            className="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white focus:outline-none focus:border-primary-500"
+                            placeholder="Re-enter password"
+                            required
+                          />
+                        </div>
+                        <p className="col-span-2 text-xs text-gray-400">
+                          These credentials will be used by the trainer to log into the system.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>

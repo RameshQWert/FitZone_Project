@@ -3,6 +3,7 @@ export { default as authService } from './authService';
 export { default as trainerService } from './trainerService';
 export { default as subscriptionService } from './subscriptionService';
 export { default as classService } from './classService';
+export { default as bookingService } from './bookingService';
 export { default as adminService } from './adminService';
 export { default as attendanceService } from './attendanceService';
 export { default as chatService } from './chatService';

@@ -80,9 +80,11 @@ const Navbar = memo(() => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-11 h-11 bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-primary-500/50 transition-all duration-300 group-hover:scale-105">
-              <span className="text-white font-bold text-xl">F</span>
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="FitZone Logo" 
+              className="h-11 w-auto group-hover:scale-105 transition-transform duration-300"
+            />
             <span className="text-xl font-heading font-bold bg-gradient-to-r from-white via-primary-300 to-secondary-400 bg-clip-text text-transparent">
               FitZone
             </span>
@@ -210,6 +212,18 @@ const Navbar = memo(() => {
                             </svg>
                           </div>
                           My Profile
+                        </Link>
+                        <Link
+                          to="/bookings"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-dark-300 hover:text-white transition-colors group"
+                        >
+                          <div className="w-9 h-9 bg-dark-300 rounded-lg flex items-center justify-center mr-3 group-hover:bg-dark-200 transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          Booking History
                         </Link>
                         <Link
                           to="/attendance-scanner"
@@ -357,6 +371,16 @@ const Navbar = memo(() => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           My Profile
+                        </Link>
+                        <Link
+                          to="/bookings"
+                          onClick={() => setIsMobileUserMenuOpen(false)}
+                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-dark-300 hover:text-white transition-colors"
+                        >
+                          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Booking History
                         </Link>
                         <Link
                           to="/attendance-scanner"

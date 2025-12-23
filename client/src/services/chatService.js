@@ -1,9 +1,21 @@
 import api from './api';
 
 const chatService = {
-  // Get or create member's conversation
+  // Get or create member's conversation with admin
   getMyConversation: async () => {
     const response = await api.get('/chat/my-conversation');
+    return response;
+  },
+
+  // Get member's conversations with trainers
+  getMyTrainerConversations: async () => {
+    const response = await api.get('/chat/my-trainer-conversations');
+    return response;
+  },
+
+  // Start or get conversation with a trainer
+  getOrCreateTrainerConversation: async (trainerId) => {
+    const response = await api.post('/chat/trainer-conversation', { trainerId });
     return response;
   },
 
@@ -27,6 +39,14 @@ const chatService = {
   // Get all conversations (Admin)
   getAllConversations: async (page = 1, limit = 20, search = '') => {
     const response = await api.get('/chat/conversations', {
+      params: { page, limit, search },
+    });
+    return response;
+  },
+
+  // Get trainer's conversations with members
+  getTrainerConversations: async (page = 1, limit = 20, search = '') => {
+    const response = await api.get('/chat/trainer-conversations', {
       params: { page, limit, search },
     });
     return response;

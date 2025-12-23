@@ -9,14 +9,15 @@ const {
   enrollInClass,
   unenrollFromClass,
 } = require('../controllers/classController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect, admin, trainer } = require('../middleware/authMiddleware');
 
-router.route('/').get(getClasses).post(protect, admin, createClass);
+// Trainers can also create and update classes
+router.route('/').get(getClasses).post(protect, trainer, createClass);
 router
   .route('/:id')
   .get(getClassById)
-  .put(protect, admin, updateClass)
-  .delete(protect, admin, deleteClass);
+  .put(protect, trainer, updateClass)
+  .delete(protect, trainer, deleteClass);
 
 router.post('/:id/enroll', protect, enrollInClass);
 router.post('/:id/unenroll', protect, unenrollFromClass);

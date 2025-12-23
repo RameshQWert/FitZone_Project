@@ -31,7 +31,8 @@ const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const menuItems = [
+  // Full menu for admin users
+  const adminMenuItems = [
     { name: 'Dashboard', path: '/admin', icon: HiOutlineHome, end: true },
     { name: 'Members', path: '/admin/members', icon: HiOutlineUsers },
     { name: 'Trainers', path: '/admin/trainers', icon: HiOutlineUserGroup },
@@ -44,6 +45,18 @@ const AdminLayout = () => {
     { name: 'Site Content', path: '/admin/site-content', icon: HiOutlineDocumentText },
     { name: 'Settings', path: '/admin/settings', icon: HiOutlineCog },
   ];
+
+  // Limited menu for trainer users
+  const trainerMenuItems = [
+    { name: 'Dashboard', path: '/admin', icon: HiOutlineHome, end: true },
+    { name: 'My Classes', path: '/admin/my-classes', icon: HiOutlineCalendar },
+    { name: 'Class Bookings', path: '/admin/class-bookings', icon: HiOutlineClipboardList },
+    { name: 'Member Messages', path: '/admin/trainer-chat', icon: HiOutlineChatAlt2 },
+  ];
+
+  // Select menu based on user role
+  const isTrainer = user?.role === 'trainer';
+  const menuItems = isTrainer ? trainerMenuItems : adminMenuItems;
 
   const storeMenuItems = [
     { name: 'Store Dashboard', path: '/admin/store', icon: HiOutlineShoppingBag, end: true },
@@ -61,16 +74,18 @@ const AdminLayout = () => {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-dark-700">
         <NavLink to="/admin" className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-xl">F</span>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="FitZone Logo" 
+            className="h-10 w-auto"
+          />
           {sidebarOpen && (
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-xl font-heading font-bold text-white"
             >
-              FitZone
+              {isTrainer ? 'Trainer Panel' : 'FitZone'}
             </motion.span>
           )}
         </NavLink>
@@ -110,39 +125,43 @@ const AdminLayout = () => {
           </NavLink>
         ))}
 
-        {/* Store Management Section */}
-        {sidebarOpen && (
-          <div className="pt-4 mt-4 border-t border-dark-700">
-            <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Store Management
-            </p>
-          </div>
-        )}
-        {storeMenuItems.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.path}
-            end={item.end}
-            className={({ isActive }) =>
-              `flex items-center px-3 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 border border-orange-500/30'
-                  : 'text-gray-400 hover:bg-dark-700 hover:text-white'
-              }`
-            }
-          >
-            <item.icon className="w-6 h-6 flex-shrink-0" />
+        {/* Store Management Section - Admin Only */}
+        {!isTrainer && (
+          <>
             {sidebarOpen && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="ml-3 font-medium"
-              >
-                {item.name}
-              </motion.span>
+              <div className="pt-4 mt-4 border-t border-dark-700">
+                <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Store Management
+                </p>
+              </div>
             )}
-          </NavLink>
-        ))}
+            {storeMenuItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                end={item.end}
+                className={({ isActive }) =>
+                  `flex items-center px-3 py-3 rounded-xl transition-all duration-200 group ${
+                    isActive
+                      ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 border border-orange-500/30'
+                      : 'text-gray-400 hover:bg-dark-700 hover:text-white'
+                  }`
+                }
+              >
+                <item.icon className="w-6 h-6 flex-shrink-0" />
+                {sidebarOpen && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="ml-3 font-medium"
+                  >
+                    {item.name}
+                  </motion.span>
+                )}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       {/* User Section */}

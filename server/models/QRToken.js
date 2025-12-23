@@ -35,9 +35,9 @@ const qrTokenSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster lookups and auto-deletion
+// Index for auto-deletion of expired tokens
 qrTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-qrTokenSchema.index({ token: 1 });
+// Note: token index is already created by 'unique: true' in schema
 
 // Static method to generate a new token
 qrTokenSchema.statics.generateToken = async function (createdBy, expirySeconds = 15) {

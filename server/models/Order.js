@@ -150,7 +150,7 @@ orderSchema.pre('save', function() {
 
 // Indexes
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
+// Note: orderNumber index is already created by 'unique: true' in schema
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ paymentStatus: 1 });
 

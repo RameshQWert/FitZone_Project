@@ -23,6 +23,15 @@ const adminUserData = {
   role: 'admin',
 };
 
+// Test Member User Data
+const memberUserData = {
+  fullName: 'Test Member',
+  email: 'member@fitzone.com',
+  password: 'member123', // Will be hashed
+  phone: '+1 (555) 111-1111',
+  role: 'member',
+};
+
 // Sample Trainers Data
 const trainersData = [
   {
@@ -959,18 +968,29 @@ const classesData = [
 // Seed function
 const seedDatabase = async () => {
   try {
+    console.log('⚠️  WARNING: This will delete ALL existing data including users!');
+    console.log('⚠️  Make sure to backup your data first if you have important users!');
+    console.log('⚠️  Press Ctrl+C within 5 seconds to cancel...');
+
+    // Add a delay to allow user to cancel
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     // Clear existing data
     await Trainer.deleteMany({});
     await Subscription.deleteMany({});
     await Class.deleteMany({});
     await Equipment.deleteMany({});
-    await User.deleteMany({ role: 'admin' }); // Only delete admin users
+    await User.deleteMany({}); // Clear ALL users
 
-    console.log('🗑️  Cleared existing data');
+    console.log('🗑️  Cleared ALL existing data (including users)');
 
     // Create admin user (password will be hashed by pre-save hook)
     const adminUser = await User.create(adminUserData);
     console.log(`✅ Created admin user: ${adminUser.email}`);
+
+    // Create test member user
+    const memberUser = await User.create(memberUserData);
+    console.log(`✅ Created member user: ${memberUser.email}`);
 
     // Insert trainers
     const trainers = await Trainer.insertMany(trainersData);
@@ -991,6 +1011,7 @@ const seedDatabase = async () => {
     console.log('\n🎉 Database seeded successfully!');
     console.log('-----------------------------------');
     console.log(`Admin User: admin@fitzone.com / admin123`);
+    console.log(`Test Member: member@fitzone.com / member123`);
     console.log(`Trainers: ${trainers.length}`);
     console.log(`Plans: ${subscriptions.length}`);
     console.log(`Programs: ${classes.length}`);
@@ -1004,4 +1025,17 @@ const seedDatabase = async () => {
 };
 
 // Run seeder
-seedDatabase();
+if (require.main === module) {
+  seedDatabase();
+}
+
+// Export data for safe seeding
+module.exports = {
+  adminUserData,
+  memberUserData,
+  trainersData,
+  subscriptionsData,
+  classesData,
+  equipmentData,
+  seedDatabase
+};

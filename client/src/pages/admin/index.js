@@ -10,3 +10,7 @@ export { default as AdminAttendance } from './Attendance';
 export { default as AdminQRDisplay } from './QRDisplay';
 export { default as AdminChat } from './Chat';
 export { default as AdminSiteContent } from './SiteContent';
+
+// Trainer-specific pages
+export { default as TrainerClasses } from './TrainerClasses';
+export { default as ClassBookings } from './ClassBookings';

@@ -4,6 +4,227 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Loading } from '../components/common';
 import { Card, CardBody } from '../components/ui';
 import { classService } from '../services';
+import { HiOutlinePlay, HiOutlineExternalLink } from 'react-icons/hi';
+
+// Default programs with YouTube video links
+const defaultPrograms = [
+  {
+    id: 'default-1',
+    title: 'Full Body Strength Training',
+    category: 'strength',
+    description: 'Build muscle and strength with this comprehensive full-body workout routine designed for all fitness levels.',
+    longDescription: 'This full-body strength training program targets all major muscle groups using compound movements. Perfect for building lean muscle mass, increasing strength, and boosting your metabolism.',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600',
+    icon: '🏋️',
+    duration: '45-60 min',
+    level: 'Intermediate',
+    calories: '400-600',
+    schedule: 'Mon, Wed, Fri',
+    trainer: 'Chris Heria',
+    benefits: ['Build Muscle Mass', 'Increase Strength', 'Boost Metabolism', 'Improve Posture'],
+    equipment: ['Dumbbells', 'Barbells', 'Pull-up Bar', 'Bench'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=vc1E5CfRfos',
+    youtubeId: 'vc1E5CfRfos'
+  },
+  {
+    id: 'default-2',
+    title: 'HIIT Fat Burner',
+    category: 'hiit',
+    description: 'High-intensity interval training to maximize calorie burn and improve cardiovascular fitness in minimal time.',
+    longDescription: 'This HIIT workout alternates between intense bursts of activity and fixed periods of less-intense activity. It\'s one of the most effective ways to burn fat and improve overall fitness.',
+    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600',
+    icon: '🔥',
+    duration: '20-30 min',
+    level: 'Advanced',
+    calories: '500-700',
+    schedule: 'Tue, Thu, Sat',
+    trainer: 'Sydney Cummings',
+    benefits: ['Burn Fat Fast', 'Boost Metabolism', 'No Equipment Needed', 'Time Efficient'],
+    equipment: ['None - Bodyweight Only'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=ml6cT4AZdqI',
+    youtubeId: 'ml6cT4AZdqI'
+  },
+  {
+    id: 'default-3',
+    title: 'Yoga for Flexibility',
+    category: 'flexibility',
+    description: 'Improve your flexibility, balance, and mental clarity with this calming yoga flow session.',
+    longDescription: 'This yoga program focuses on increasing flexibility, reducing stress, and improving overall body awareness. Perfect for beginners and experienced practitioners alike.',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600',
+    icon: '🧘',
+    duration: '30-45 min',
+    level: 'Beginner',
+    calories: '150-250',
+    schedule: 'Daily',
+    trainer: 'Adriene Mishler',
+    benefits: ['Increase Flexibility', 'Reduce Stress', 'Improve Balance', 'Mental Clarity'],
+    equipment: ['Yoga Mat', 'Blocks', 'Strap'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=v7AYKMP6rOE',
+    youtubeId: 'v7AYKMP6rOE'
+  },
+  {
+    id: 'default-4',
+    title: 'Cardio Dance Workout',
+    category: 'cardio',
+    description: 'Fun and energetic dance cardio workout that doesn\'t feel like exercise. Perfect for burning calories while having fun!',
+    longDescription: 'Get your heart pumping with this high-energy dance cardio session. Combines popular dance moves with cardio exercises for a fun, effective workout.',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600',
+    icon: '💃',
+    duration: '30-45 min',
+    level: 'All Levels',
+    calories: '350-500',
+    schedule: 'Mon, Wed, Fri',
+    trainer: 'Fitness Marshall',
+    benefits: ['Burn Calories', 'Improve Coordination', 'Boost Mood', 'Fun Exercise'],
+    equipment: ['None - Just You!'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=ZWk19OVon2k',
+    youtubeId: 'ZWk19OVon2k'
+  },
+  {
+    id: 'default-5',
+    title: 'Core & Abs Sculpt',
+    category: 'strength',
+    description: 'Target your core with this intense ab workout designed to build a strong, defined midsection.',
+    longDescription: 'This core-focused program targets all areas of your abs including upper abs, lower abs, and obliques. Build a strong core that supports all your other activities.',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600',
+    icon: '💪',
+    duration: '15-20 min',
+    level: 'Intermediate',
+    calories: '150-250',
+    schedule: 'Daily',
+    trainer: 'Pamela Reif',
+    benefits: ['Sculpt Abs', 'Strengthen Core', 'Improve Posture', 'Better Stability'],
+    equipment: ['Mat Only'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=2pLT-olgUJs',
+    youtubeId: '2pLT-olgUJs'
+  },
+  {
+    id: 'default-6',
+    title: 'Boxing Cardio',
+    category: 'cardio',
+    description: 'Learn boxing techniques while getting an incredible cardio workout. Punch your way to fitness!',
+    longDescription: 'This boxing-inspired workout combines punches, footwork, and cardio drills for an intense full-body workout. Great for stress relief and building endurance.',
+    image: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600',
+    icon: '🥊',
+    duration: '30-45 min',
+    level: 'Intermediate',
+    calories: '400-600',
+    schedule: 'Tue, Thu',
+    trainer: 'NateBower Fitness',
+    benefits: ['Full Body Workout', 'Stress Relief', 'Improve Reflexes', 'Build Endurance'],
+    equipment: ['Boxing Gloves (Optional)', 'Heavy Bag (Optional)'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=sHcDdmzqPRQ',
+    youtubeId: 'sHcDdmzqPRQ'
+  },
+  {
+    id: 'default-7',
+    title: 'Leg Day Destroyer',
+    category: 'strength',
+    description: 'Build powerful legs with this intense lower body workout focusing on quads, hamstrings, and glutes.',
+    longDescription: 'This leg-focused program includes squats, lunges, and other compound movements to build strong, toned legs. Perfect for developing lower body strength.',
+    image: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=600',
+    icon: '🦵',
+    duration: '45-60 min',
+    level: 'Advanced',
+    calories: '400-600',
+    schedule: 'Tue, Fri',
+    trainer: 'Jeff Nippard',
+    benefits: ['Build Leg Strength', 'Grow Glutes', 'Improve Athleticism', 'Burn Calories'],
+    equipment: ['Barbells', 'Dumbbells', 'Leg Press', 'Squat Rack'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=_kLBi8tF6Kk',
+    youtubeId: '_kLBi8tF6Kk'
+  },
+  {
+    id: 'default-8',
+    title: 'Beginner Home Workout',
+    category: 'cardio',
+    description: 'Perfect for beginners! No equipment needed. Start your fitness journey from the comfort of your home.',
+    longDescription: 'This beginner-friendly workout requires no equipment and can be done anywhere. Perfect for those just starting their fitness journey or looking for a quick home workout.',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600',
+    icon: '🏠',
+    duration: '20-30 min',
+    level: 'Beginner',
+    calories: '200-350',
+    schedule: 'Daily',
+    trainer: 'Heather Robertson',
+    benefits: ['No Equipment', 'Beginner Friendly', 'Home Workout', 'Build Foundation'],
+    equipment: ['None - Bodyweight Only'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=gC_L9qAHVJ8',
+    youtubeId: 'gC_L9qAHVJ8'
+  },
+  {
+    id: 'default-9',
+    title: 'Upper Body Pump',
+    category: 'strength',
+    description: 'Sculpt your arms, chest, shoulders and back with this comprehensive upper body workout.',
+    longDescription: 'Target all major upper body muscle groups with this balanced workout routine. Great for building a strong, well-proportioned upper body.',
+    image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c149a?w=600',
+    icon: '💪',
+    duration: '40-50 min',
+    level: 'Intermediate',
+    calories: '300-450',
+    schedule: 'Mon, Thu',
+    trainer: 'Jeremy Ethier',
+    benefits: ['Build Upper Body', 'Increase Strength', 'Muscle Definition', 'Balanced Physique'],
+    equipment: ['Dumbbells', 'Pull-up Bar', 'Bench'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=BkS1-El_WlE',
+    youtubeId: 'BkS1-El_WlE'
+  },
+  {
+    id: 'default-10',
+    title: 'Stretching & Recovery',
+    category: 'flexibility',
+    description: 'Essential stretching routine for muscle recovery, injury prevention, and improved flexibility.',
+    longDescription: 'This recovery-focused program helps reduce muscle soreness, improve flexibility, and prevent injuries. Perfect after intense workouts or on rest days.',
+    image: 'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=600',
+    icon: '🧘‍♂️',
+    duration: '15-20 min',
+    level: 'All Levels',
+    calories: '50-100',
+    schedule: 'Daily',
+    trainer: 'Tom Merrick',
+    benefits: ['Reduce Soreness', 'Prevent Injuries', 'Improve Flexibility', 'Better Recovery'],
+    equipment: ['Yoga Mat', 'Foam Roller (Optional)'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=L_xrDAtykMI',
+    youtubeId: 'L_xrDAtykMI'
+  },
+  {
+    id: 'default-11',
+    title: 'Tabata Challenge',
+    category: 'hiit',
+    description: '4-minute Tabata intervals that push your limits. Maximum results in minimum time!',
+    longDescription: 'Tabata training consists of 20 seconds of intense work followed by 10 seconds of rest, repeated 8 times. This protocol is scientifically proven to improve both aerobic and anaerobic fitness.',
+    image: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=600',
+    icon: '⏱️',
+    duration: '15-25 min',
+    level: 'Advanced',
+    calories: '300-500',
+    schedule: 'Mon, Wed, Fri',
+    trainer: 'THENX',
+    benefits: ['Maximum Intensity', 'Quick Results', 'Boost Metabolism', 'Time Efficient'],
+    equipment: ['None - Bodyweight'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=XIeCMhNWFQQ',
+    youtubeId: 'XIeCMhNWFQQ'
+  },
+  {
+    id: 'default-12',
+    title: 'Swimming Techniques',
+    category: 'aqua',
+    description: 'Master swimming techniques for a full-body, low-impact workout that\'s easy on the joints.',
+    longDescription: 'Learn proper swimming techniques including freestyle, backstroke, and breaststroke. Swimming is one of the best full-body workouts with minimal joint impact.',
+    image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600',
+    icon: '🏊',
+    duration: '45-60 min',
+    level: 'All Levels',
+    calories: '400-700',
+    schedule: 'Tue, Thu, Sat',
+    trainer: 'Skills N Talents',
+    benefits: ['Low Impact', 'Full Body', 'Joint Friendly', 'Build Endurance'],
+    equipment: ['Swimming Pool', 'Goggles', 'Swim Cap'],
+    youtubeUrl: 'https://www.youtube.com/watch?v=gh5mAtmeR3Y',
+    youtubeId: 'gh5mAtmeR3Y'
+  }
+];
 
 const Programs = () => {
   const [programs, setPrograms] = useState([]);
@@ -17,6 +238,14 @@ const Programs = () => {
       try {
         setLoading(true);
         const data = await classService.getAll();
+        
+        // If no data from API, use default programs
+        if (!data || data.length === 0) {
+          setPrograms(defaultPrograms);
+          setLoading(false);
+          return;
+        }
+        
         // Map API data to expected format
         const mappedPrograms = data.map((program, index) => ({
           id: program._id,
@@ -32,12 +261,15 @@ const Programs = () => {
           schedule: formatProgramSchedule(program.schedule),
           trainer: program.trainer?.fullName || 'Expert Trainer',
           benefits: program.benefits || getDefaultBenefits(program.type),
-          equipment: getDefaultEquipment(program.type)
+          equipment: getDefaultEquipment(program.type),
+          youtubeUrl: program.youtubeUrl || null,
+          youtubeId: program.youtubeId || null
         }));
         setPrograms(mappedPrograms);
       } catch (err) {
         console.error('Error fetching programs:', err);
-        setError('Failed to load programs. Please try again later.');
+        // On error, show default programs instead of error message
+        setPrograms(defaultPrograms);
       } finally {
         setLoading(false);
       }
@@ -355,12 +587,25 @@ const Programs = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
-                        <span className="text-primary-400 text-sm font-medium group-hover:text-primary-300 transition-colors flex items-center gap-1">
-                          View Details
-                          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </span>
+                        {program.youtubeUrl ? (
+                          <a
+                            href={program.youtubeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm font-medium transition-colors"
+                          >
+                            <HiOutlinePlay className="w-4 h-4" />
+                            Watch
+                          </a>
+                        ) : (
+                          <span className="text-primary-400 text-sm font-medium group-hover:text-primary-300 transition-colors flex items-center gap-1">
+                            View Details
+                            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </span>
+                        )}
                         <Button variant="primary" size="sm">
                           Join Now
                         </Button>
@@ -481,8 +726,40 @@ const Programs = () => {
                   </div>
                 </div>
 
+                {/* YouTube Video Embed */}
+                {selectedProgram.youtubeId && (
+                  <div className="mb-8">
+                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <HiOutlinePlay className="w-6 h-6 text-red-500" />
+                      Watch Workout Video
+                    </h3>
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                      <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${selectedProgram.youtubeId}`}
+                        title={selectedProgram.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* CTA */}
                 <div className="flex flex-col sm:flex-row gap-4">
+                  {selectedProgram.youtubeUrl && (
+                    <a
+                      href={selectedProgram.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button variant="primary" className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 border-red-600">
+                        <HiOutlineExternalLink className="w-5 h-5" />
+                        Watch on YouTube
+                      </Button>
+                    </a>
+                  )}
                   <Link to="/register" className="flex-1">
                     <Button variant="primary" className="w-full">
                       Join This Program

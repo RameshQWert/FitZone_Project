@@ -149,11 +149,26 @@ const classSchema = new mongoose.Schema(
 );
 
 // Generate slug before saving
-classSchema.pre('save', function (next) {
-  if (!this.slug) {
-    this.slug = this.name.toLowerCase().replace(/\s+/g, '-');
+classSchema.pre('save', async function () {
+  try {
+    if (!this.slug) {
+      const baseSlug = this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      let slug = baseSlug;
+      let counter = 1;
+      
+      // Check for existing slugs and add suffix if needed
+      const Class = mongoose.model('Class');
+      while (await Class.findOne({ slug, _id: { $ne: this._id } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      this.slug = slug;
+    }
+  } catch (error) {
+    console.error('Error generating slug:', error);
+    // Generate a unique slug with timestamp as fallback
+    this.slug = `${this.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
   }
-  next();
 });
 
 // Virtual for available spots

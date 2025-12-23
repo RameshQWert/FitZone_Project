@@ -22,6 +22,8 @@ const Facilities = lazy(() => import('./pages/Facilities'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MemberChat = lazy(() => import('./pages/MemberChat'));
 const BMICalculator = lazy(() => import('./pages/BMICalculator'));
+const ClassBooking = lazy(() => import('./pages/ClassBooking'));
+const BookingHistory = lazy(() => import('./pages/BookingHistory'));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -35,7 +37,10 @@ const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminAttendance = lazy(() => import('./pages/admin/Attendance'));
 const AdminQRDisplay = lazy(() => import('./pages/admin/QRDisplay'));
 const AdminChat = lazy(() => import('./pages/admin/Chat'));
+const TrainerChat = lazy(() => import('./pages/admin/TrainerChat'));
 const AdminSiteContent = lazy(() => import('./pages/admin/SiteContent'));
+const TrainerClasses = lazy(() => import('./pages/admin/TrainerClasses'));
+const ClassBookings = lazy(() => import('./pages/admin/ClassBookings'));
 
 // Lazy load admin store pages
 const AdminStoreDashboard = lazy(() => import('./pages/admin/StoreDashboard'));
@@ -96,6 +101,21 @@ const GuestRoute = memo(({ children }) => {
   return children;
 });
 
+// Admin Only Route - Redirect trainers from admin-only pages
+const AdminOnlyRoute = memo(({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <PageLoader />;
+  }
+  
+  if (user?.role !== 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+  
+  return children;
+});
+
 // App Routes Component - Wrapped inside AuthProvider
 const AppRoutes = () => {
   return (
@@ -115,6 +135,8 @@ const AppRoutes = () => {
           <Route path="/attendance-scanner" element={<ProtectedRoute><AttendanceScanner /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><MemberChat /></ProtectedRoute>} />
           <Route path="/bmi-calculator" element={<ProtectedRoute><BMICalculator /></ProtectedRoute>} />
+          <Route path="/book-class/:classId" element={<ProtectedRoute><ClassBooking /></ProtectedRoute>} />
+          <Route path="/bookings" element={<ProtectedRoute><BookingHistory /></ProtectedRoute>} />
         </Route>
 
         {/* Store Routes with StoreLayout */}
@@ -142,21 +164,29 @@ const AppRoutes = () => {
           }
         >
           <Route index element={<AdminDashboard />} />
-          <Route path="members" element={<AdminMembers />} />
-          <Route path="trainers" element={<AdminTrainers />} />
-          <Route path="plans" element={<AdminPlans />} />
-          <Route path="equipment" element={<AdminEquipment />} />
-          <Route path="payments" element={<AdminPayments />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="attendance" element={<AdminAttendance />} />
-          <Route path="qr-display" element={<AdminQRDisplay />} />
+          
+          {/* Trainer-specific routes */}
+          <Route path="my-classes" element={<TrainerClasses />} />
+          <Route path="class-bookings" element={<ClassBookings />} />
           <Route path="chat" element={<AdminChat />} />
-          <Route path="site-content" element={<AdminSiteContent />} />
-          {/* Store Management Routes */}
-          <Route path="store" element={<AdminStoreDashboard />} />
-          <Route path="store/products" element={<AdminStoreProducts />} />
-          <Route path="store/orders" element={<AdminStoreOrders />} />
+          <Route path="trainer-chat" element={<TrainerChat />} />
+          
+          {/* Admin-only routes */}
+          <Route path="members" element={<AdminOnlyRoute><AdminMembers /></AdminOnlyRoute>} />
+          <Route path="trainers" element={<AdminOnlyRoute><AdminTrainers /></AdminOnlyRoute>} />
+          <Route path="plans" element={<AdminOnlyRoute><AdminPlans /></AdminOnlyRoute>} />
+          <Route path="equipment" element={<AdminOnlyRoute><AdminEquipment /></AdminOnlyRoute>} />
+          <Route path="payments" element={<AdminOnlyRoute><AdminPayments /></AdminOnlyRoute>} />
+          <Route path="reports" element={<AdminOnlyRoute><AdminReports /></AdminOnlyRoute>} />
+          <Route path="settings" element={<AdminOnlyRoute><AdminSettings /></AdminOnlyRoute>} />
+          <Route path="attendance" element={<AdminOnlyRoute><AdminAttendance /></AdminOnlyRoute>} />
+          <Route path="qr-display" element={<AdminOnlyRoute><AdminQRDisplay /></AdminOnlyRoute>} />
+          <Route path="site-content" element={<AdminOnlyRoute><AdminSiteContent /></AdminOnlyRoute>} />
+          
+          {/* Store Management Routes - Admin only */}
+          <Route path="store" element={<AdminOnlyRoute><AdminStoreDashboard /></AdminOnlyRoute>} />
+          <Route path="store/products" element={<AdminOnlyRoute><AdminStoreProducts /></AdminOnlyRoute>} />
+          <Route path="store/orders" element={<AdminOnlyRoute><AdminStoreOrders /></AdminOnlyRoute>} />
         </Route>
 
         {/* 404 Route */}
